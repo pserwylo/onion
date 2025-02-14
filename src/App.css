@@ -1,42 +1,50 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.camera-wrapper {
+    position: relative;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.onion-skin {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.onion-skin:nth-of-type(0) {
+    opacity: 0.5;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.onion-skin:nth-of-type(1) {
+    opacity: 0.4;
 }
 
-.card {
-  padding: 2em;
+.onion-skin:nth-of-type(2) {
+    opacity: 0.3;
 }
 
-.read-the-docs {
-  color: #888;
+.onion-skin:nth-of-type(3) {
+    opacity: 0.2;
+}
+
+.onion-skin:nth-of-type(4) {
+    opacity: 0.1;
+}
+
+.frames {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.frame {
+    padding: 0.25em;
+}
+
+.frame .thumbnail {
+    max-width: 200px;
+}
+
+.frame .thumbnail.current {
+    border: solid 2px red;
 }
