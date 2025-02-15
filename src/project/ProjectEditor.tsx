@@ -52,9 +52,11 @@ const ProjectEditor = () => {
                 <Webcam
                     ref={webcamRef}
                     audio={false}
-                    height={480}
                     screenshotFormat="image/webp"
-                    width={640}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                    }}
                     className="camera camera--feed"
                     videoConstraints={videoConstraints}/>
 
