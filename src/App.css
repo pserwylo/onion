@@ -19,6 +19,10 @@ html, body {
     max-width: 100%;
 }
 
+.camera {
+    max-width: 100%;
+}
+
 .main-actions {
     display: flex;
     width: 100%;
@@ -40,6 +44,8 @@ html, body {
 
 .onion-skin {
     position: absolute;
+    max-width: 100%;
+    max-height: 100%;
     top: 0;
     bottom: 0;
     left: 0;
@@ -115,9 +121,14 @@ html, body {
 }
 
 .frame .thumbnail {
-    max-width: 120px;
+    max-width: 100px;
 }
 
 .frame .thumbnail.current {
     border: solid 2px red;
+}
+
+.preview {
+    width: 100%;
+    max-width: 100%;
 }

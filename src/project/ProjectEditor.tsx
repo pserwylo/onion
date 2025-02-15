@@ -53,10 +53,8 @@ const ProjectEditor = () => {
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/webp"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                    }}
+                    height={480}
+                    width={640}
                     className="camera camera--feed"
                     videoConstraints={videoConstraints}/>
 
@@ -75,11 +73,14 @@ const VideoPreview = () => {
     const previewVideo = useSelector(selectPreviewVideo);
 
     return (
-        <video
-            className="preview"
-            src={previewVideo}
-            controls
-        />
+        <>
+            <a href={previewVideo} download="video.webm">Download</a>
+            <video
+                className="preview"
+                src={previewVideo}
+                controls
+            />
+        </>
     );
 }
 
