@@ -5,11 +5,13 @@
 
 .camera-wrapper {
     position: relative;
+    max-width: 100%;
 }
 
 .main-actions {
     display: flex;
     width: 100%;
+    max-width: 100%;
     padding: 0.5em 0;
 }
 
@@ -55,6 +57,7 @@
 
 .frame-wrapper {
     width: 640px;
+    max-width: 100%;
 }
 
 .frames {
