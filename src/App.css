@@ -1,5 +1,28 @@
+.project {
+    width: 640px;
+    margin: 0 auto;
+}
+
 .camera-wrapper {
     position: relative;
+}
+
+.main-actions {
+    display: flex;
+    width: 100%;
+    padding: 0.5em 0;
+}
+
+.main-actions--take-photo {
+    padding: 1em;
+    font-size: 1.5em;
+    flex-grow: 1;
+    margin-right: 0.5em;
+}
+
+.main-actions--camera-reverse {
+    padding: 1em;
+    font-size: 1.5em;
 }
 
 .onion-skin {
@@ -30,19 +53,55 @@
     opacity: 0.1;
 }
 
+.frame-wrapper {
+    width: 640px;
+}
+
 .frames {
     list-style: none;
     padding: 0;
     display: flex;
-    flex-wrap: wrap;
+    overflow-x: scroll;
+    flex-direction: row-reverse;
+    flex-wrap: nowrap;
 }
 
 .frame {
     padding: 0.25em;
+    position: relative;
+}
+
+.frame--actions {
+    position: absolute;
+    top: 0.75em;
+    right: 0.75em;
+    color: white;
+    text-shadow: black 0 0 2px;
+    display: none;
+}
+
+.frame:hover .frame--actions {
+    display: block;
+}
+
+.frame--index {
+    position: absolute;
+    bottom: 0.75em;
+    left: 0.75em;
+    color: white;
+    text-shadow: black 0 0 2px;
+}
+
+.frame--time {
+    position: absolute;
+    bottom: 0.75em;
+    right: 0.75em;
+    color: white;
+    text-shadow: black 0 0 2px;
 }
 
 .frame .thumbnail {
-    max-width: 200px;
+    max-width: 120px;
 }
 
 .frame .thumbnail.current {
