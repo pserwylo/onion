@@ -13,6 +13,7 @@ const ProjectEditor = () => {
 
     const dispatch = useAppDispatch();
     const onionSkinImages = useSelector(selectOnionSkinImages);
+    const images = useSelector(selectImages);
     const [selfieCam, setSelfieCam] = useState(false);
 
     // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
@@ -40,14 +41,6 @@ const ProjectEditor = () => {
 
     return (
         <div className="project">
-            <div className="main-actions">
-                <button onClick={capture} className="main-actions--take-photo">
-                    📷 Take picture
-                </button>
-                <button onClick={reverse} className="main-actions--camera-reverse">
-                    🔄
-                </button>
-            </div>
             <div className="camera-wrapper">
                 <Webcam
                     ref={webcamRef}
@@ -55,15 +48,24 @@ const ProjectEditor = () => {
                     screenshotFormat="image/webp"
                     height={480}
                     width={640}
+                    disablePictureInPicture
                     className="camera camera--feed"
                     videoConstraints={videoConstraints}/>
 
                 {onionSkinImages.map((image) => (
                     <img className="onion-skin" src={image} key={image}/>
                 ))}
+                <button onClick={reverse} className="action--camera-reverse">
+                    🔄
+                </button>
+            </div>
+            <div className="main-actions">
+                <button onClick={capture} className="action--take-photo">
+                    📷 Take picture
+                </button>
             </div>
             <FrameList />
-            <VideoPreview />
+            {images.length > 0 && <VideoPreview />}
         </div>
 
     );
@@ -74,12 +76,14 @@ const VideoPreview = () => {
 
     return (
         <>
-            <a href={previewVideo} download="video.webm">Download</a>
             <video
                 className="preview"
                 src={previewVideo}
                 controls
             />
+            <div className="main-actions">
+                <a href={previewVideo} className="action--download-video" download="video.webm">Download</a>
+            </div>
         </>
     );
 }
@@ -115,9 +119,7 @@ const Frame = ({ image, index }: IFrameProps) => {
 
     return (
         <li className="frame">
-            <a href="#">
-                <img src={image} className="thumbnail" />
-            </a>
+            <img src={image} className="thumbnail" />
             <div className="frame--index">
                 {index}
             </div>
@@ -125,7 +127,7 @@ const Frame = ({ image, index }: IFrameProps) => {
                 {calculateFrameTime(index)}s
             </div>
             <div className="frame--actions">
-                <button onClick={handleDelete}>
+                <button className="frame-action frame-action--delete-frame" onClick={handleDelete}>
                     ❌
                 </button>
             </div>

@@ -30,16 +30,24 @@ html, body {
     padding: 0.5em 0;
 }
 
-.main-actions--take-photo {
+.action--download-video {
     padding: 1em;
     font-size: 1.5em;
     flex-grow: 1;
-    margin-right: 0.5em;
 }
 
-.main-actions--camera-reverse {
+.action--take-photo {
     padding: 1em;
     font-size: 1.5em;
+    flex-grow: 1;
+}
+
+.action--camera-reverse {
+    padding: 0.1em 0.2em;
+    font-size: 1.5em;
+    position: absolute;
+    top: 1em;
+    right: 1em;
 }
 
 .onion-skin {
@@ -93,15 +101,25 @@ html, body {
 
 .frame--actions {
     position: absolute;
-    top: 0.75em;
-    right: 0.75em;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     color: white;
     text-shadow: black 0 0 2px;
     display: none;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+}
+
+.frame-action {
+    padding: 0.4em 0.6em;
+    font-size: 1.2em;
 }
 
 .frame:hover .frame--actions {
-    display: block;
+    display: flex;
 }
 
 .frame--index {
