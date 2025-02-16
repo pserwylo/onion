@@ -1,9 +1,11 @@
 import Webcam from "react-webcam";
-import {useCallback, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {useAppDispatch} from "../store/hooks.ts";
 import {
-    appendImageAndRefreshPreviewVideo, removeImage,
-    selectImages, selectOnionSkinImages,
+    addImage, generatePreviewVideo,
+    removeImage,
+    selectImages,
+    selectOnionSkinImages,
     selectPreviewVideo,
     selectProjectOptions
 } from "./projectSlice.ts";
@@ -15,6 +17,7 @@ const ProjectEditor = () => {
     const onionSkinImages = useSelector(selectOnionSkinImages);
     const images = useSelector(selectImages);
     const [selfieCam, setSelfieCam] = useState(false);
+    const [showVideoPreview, setShowVideoPreview] = useState(false);
 
     // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
     const webcamRef = useRef<Webcam>(null)
@@ -23,7 +26,7 @@ const ProjectEditor = () => {
     const capture = useCallback(async () => {
         const imageSrc = webcamRef.current?.getScreenshot()
         if (imageSrc) {
-            dispatch(appendImageAndRefreshPreviewVideo(imageSrc));
+            dispatch(addImage(imageSrc));
         }
     }, [webcamRef])
 
@@ -39,8 +42,12 @@ const ProjectEditor = () => {
         }
     };
 
+    if (showVideoPreview) {
+        return <VideoPreview onClose={() => setShowVideoPreview(false)} />
+    }
+
     return (
-        <div className="project">
+        <div className="content project">
             <div className="camera-wrapper">
                 <Webcam
                     ref={webcamRef}
@@ -65,26 +72,52 @@ const ProjectEditor = () => {
                 </button>
             </div>
             <FrameList />
-            {images.length > 0 && <VideoPreview />}
+            {images.length > 0 && (
+                <a className="video-preview--wrapper" href="#" onClick={e => {
+                    e.preventDefault()
+                    setShowVideoPreview(true);
+                }}>
+                    <img className="video-preview--image" src={images[0]} />
+                    <div className="video-preview--icon">
+                        ▶️
+                    </div>
+                </a>
+            )}
         </div>
 
     );
 }
 
-const VideoPreview = () => {
+type IVideoPreviewProps = {
+    onClose: () => void;
+}
+
+const VideoPreview = ({ onClose }: IVideoPreviewProps) => {
     const previewVideo = useSelector(selectPreviewVideo);
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        dispatch(generatePreviewVideo());
+    }, [])
 
     return (
-        <>
+        <div className="content">
             <video
                 className="preview"
                 src={previewVideo}
                 controls
             />
             <div className="main-actions">
-                <a href={previewVideo} className="action--download-video" download="video.webm">Download</a>
+                <button className="action--back" onClick={onClose}>
+                    ⬅️ Back
+                </button>
+                <a href={previewVideo} download="video.webm">
+                    <button className="action--download-video">
+                        🔽 Download
+                    </button>
+                </a>
             </div>
-        </>
+        </div>
     );
 }
 

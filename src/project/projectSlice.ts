@@ -4,12 +4,10 @@ import type { RootState } from '../store/store'
 import Whammy from "ts-whammy";
 import {blobToDataURL} from "./projectUtils.ts";
 
-export const appendImageAndRefreshPreviewVideo = createAsyncThunk('project/appendImageAndRefreshPreviewVideo', async (image: string, { getState, dispatch })=> {
-    dispatch(projectSlice.actions.addImage(image));
-
+export const generatePreviewVideo = createAsyncThunk('project/appendImageAndRefreshPreviewVideo', async (_: void, { getState, dispatch })=> {
     const { frameRate } = selectProjectOptions(getState() as RootState);
     const images = selectImages(getState() as RootState);
-    const video = Whammy.fromImageArray([...images, image], frameRate) as Blob;
+    const video = Whammy.fromImageArray(images, frameRate) as Blob;
     const data = await blobToDataURL(video);
 
     dispatch(projectSlice.actions.updatePreviewVideo(data));

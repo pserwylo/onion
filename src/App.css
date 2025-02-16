@@ -5,13 +5,13 @@ html, body {
     width: 100%;
 }
 
-.project {
+.content {
     width: 640px;
     margin: 0 auto;
 }
 
 @media screen and (max-width: 1280px){
-    .project{ width: 100vw; margin: 0; padding: 0; }
+    .content { width: 100vw; margin: 0; padding: 0; }
 }
 
 .camera-wrapper {
@@ -28,6 +28,13 @@ html, body {
     width: 100%;
     max-width: 100%;
     padding: 0.5em 0;
+}
+
+.action--back {
+    padding: 1em;
+    font-size: 1.5em;
+    flex-grow: 1;
+    margin-right: 0.5em;
 }
 
 .action--download-video {
@@ -146,7 +153,31 @@ html, body {
     border: solid 2px red;
 }
 
+.preview-wrapper {
+    width: 100%;
+    max-width: 100%;
+}
+
 .preview {
     width: 100%;
     max-width: 100%;
+}
+
+.video-preview--wrapper {
+    position: relative;
+    width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+.video-preview--image {
+    max-width: 100%;
+}
+
+.video-preview--icon {
+    position: absolute;
+    top: calc(50% - 0.5em);
+    left: calc(50% - 0.5em);
+    font-size: 8em;
+    opacity: 0.8;
 }
