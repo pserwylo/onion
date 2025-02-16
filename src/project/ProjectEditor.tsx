@@ -2,7 +2,7 @@ import Webcam from "react-webcam";
 import {useCallback, useEffect, useRef, useState} from "react";
 import {useAppDispatch} from "../store/hooks.ts";
 import {
-    addImage, generatePreviewVideo,
+    addImage, generatePreviewVideo, IImageDTO, loadImages,
     removeImage,
     selectImages,
     selectOnionSkinImages,
@@ -22,7 +22,11 @@ const ProjectEditor = () => {
     // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
     const webcamRef = useRef<Webcam>(null)
 
-    // Call this function to take a screenshot
+    useEffect(() => {
+        console.log('Initial load, will loadImages()')
+        dispatch(loadImages());
+    }, []);
+
     const capture = useCallback(async () => {
         const imageSrc = webcamRef.current?.getScreenshot()
         if (imageSrc) {
@@ -37,9 +41,7 @@ const ProjectEditor = () => {
     const videoConstraints = {
         width: 640,
         height: 480,
-        facingMode: selfieCam ? "user" : {
-            exact: "environment",
-        }
+        facingMode: selfieCam ? "user" : "environment",
     };
 
     if (showVideoPreview) {
@@ -60,7 +62,7 @@ const ProjectEditor = () => {
                     videoConstraints={videoConstraints}/>
 
                 {onionSkinImages.map((image) => (
-                    <img className="onion-skin" src={image} key={image}/>
+                    <img className="onion-skin" src={image.src} key={image.id}/>
                 ))}
                 <button onClick={reverse} className="action--camera-reverse">
                     🔄
@@ -77,7 +79,7 @@ const ProjectEditor = () => {
                     e.preventDefault()
                     setShowVideoPreview(true);
                 }}>
-                    <img className="video-preview--image" src={images[0]} />
+                    <img className="video-preview--image" src={images[0].src} />
                     <div className="video-preview--icon">
                         ▶️
                     </div>
@@ -123,11 +125,16 @@ const VideoPreview = ({ onClose }: IVideoPreviewProps) => {
 
 const FrameList = () => {
     const images = useSelector(selectImages);
+    const dispatch = useAppDispatch();
+
+    const handleDelete = (image: IImageDTO) => {
+        dispatch(removeImage(image.id));
+    }
 
     return (
         <div className="frame-wrapper">
             <ul className="frames">
-                {images.toReversed().map(((image, i) => <Frame image={image} key={i} index={images.length - i} />))}
+                {images.toReversed().map(((image, i) => <Frame image={image.src} key={i} index={images.length - i} onDelete={() => handleDelete(image)} />))}
             </ul>
         </div>
     )
@@ -136,19 +143,15 @@ const FrameList = () => {
 type IFrameProps = {
     image: string;
     index: number;
+    onDelete: () => void;
 }
 
-const Frame = ({ image, index }: IFrameProps) => {
+const Frame = ({ image, index, onDelete }: IFrameProps) => {
     const { frameRate } = useSelector(selectProjectOptions);
-    const dispatch = useAppDispatch();
 
     const calculateFrameTime = (index: number) => {
         return index / frameRate;
     };
-
-    const handleDelete = () => {
-        dispatch(removeImage(image));
-    }
 
     return (
         <li className="frame">
@@ -160,7 +163,7 @@ const Frame = ({ image, index }: IFrameProps) => {
                 {calculateFrameTime(index)}s
             </div>
             <div className="frame--actions">
-                <button className="frame-action frame-action--delete-frame" onClick={handleDelete}>
+                <button className="frame-action frame-action--delete-frame" onClick={onDelete}>
                     ❌
                 </button>
             </div>
