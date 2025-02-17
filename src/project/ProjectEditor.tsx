@@ -3,31 +3,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
   addImage,
-  generatePreviewVideo,
   IImageDTO,
   loadImages,
   removeImage,
   selectImages,
   selectOnionSkinImages,
-  selectPreviewVideo,
   selectProjectOptions,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
-import { Box, Button, Container, IconButton } from "@mui/material";
-import {
-  CameraAlt,
-  Cameraswitch,
-  ChevronLeft,
-  CloudDownload,
-  PlayCircle,
-} from "@mui/icons-material";
+import { Button, Container, IconButton } from "@mui/material";
+import { CameraAlt, Cameraswitch, PlayCircle } from "@mui/icons-material";
+import { Link } from "react-router";
 
 const ProjectEditor = () => {
   const dispatch = useAppDispatch();
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const images = useSelector(selectImages);
   const [selfieCam, setSelfieCam] = useState(false);
-  const [showVideoPreview, setShowVideoPreview] = useState(false);
 
   // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
   const webcamRef = useRef<Webcam>(null);
@@ -51,10 +43,6 @@ const ProjectEditor = () => {
     width: 640,
     facingMode: selfieCam ? "user" : "environment",
   };
-
-  if (showVideoPreview) {
-    return <VideoPreview onClose={() => setShowVideoPreview(false)} />;
-  }
 
   return (
     <Container maxWidth="sm">
@@ -100,14 +88,7 @@ const ProjectEditor = () => {
       </div>
       <FrameList />
       {images.length > 0 && (
-        <a
-          className="video-preview--wrapper"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setShowVideoPreview(true);
-          }}
-        >
+        <Link className="video-preview--wrapper" to="/preview">
           <img className="video-preview--image" src={images[0].src} />
           <PlayCircle
             sx={{
@@ -119,48 +100,8 @@ const ProjectEditor = () => {
               color: "white",
             }}
           />
-        </a>
+        </Link>
       )}
-    </Container>
-  );
-};
-
-type IVideoPreviewProps = {
-  onClose: () => void;
-};
-
-const VideoPreview = ({ onClose }: IVideoPreviewProps) => {
-  const previewVideo = useSelector(selectPreviewVideo);
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    dispatch(generatePreviewVideo());
-  }, [dispatch]);
-
-  return (
-    <Container maxWidth="sm">
-      <video className="preview" src={previewVideo} controls />
-      <Box sx={{ display: "flex", gap: "0.5em" }}>
-        <Button
-          onClick={onClose}
-          startIcon={<ChevronLeft />}
-          size="large"
-          sx={{ flexGrow: 1 }}
-          variant="contained"
-        >
-          Back
-        </Button>
-        <Button
-          component="a"
-          href={previewVideo}
-          download="video.webm"
-          startIcon={<CloudDownload />}
-          size="large"
-          variant="outlined"
-        >
-          Download
-        </Button>
-      </Box>
     </Container>
   );
 };
