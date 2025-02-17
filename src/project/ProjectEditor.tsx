@@ -13,6 +13,14 @@ import {
   selectProjectOptions,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
+import { Box, Button, Container, IconButton } from "@mui/material";
+import {
+  CameraAlt,
+  Cameraswitch,
+  ChevronLeft,
+  CloudDownload,
+  PlayCircle,
+} from "@mui/icons-material";
 
 const ProjectEditor = () => {
   const dispatch = useAppDispatch();
@@ -41,7 +49,6 @@ const ProjectEditor = () => {
 
   const videoConstraints = {
     width: 640,
-    height: 480,
     facingMode: selfieCam ? "user" : "environment",
   };
 
@@ -50,13 +57,12 @@ const ProjectEditor = () => {
   }
 
   return (
-    <div className="content project">
+    <Container maxWidth="sm">
       <div className="camera-wrapper">
         <Webcam
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/webp"
-          height={480}
           width={640}
           disablePictureInPicture
           className="camera camera--feed"
@@ -66,14 +72,31 @@ const ProjectEditor = () => {
         {onionSkinImages.map((image) => (
           <img className="onion-skin" src={image.src} key={image.id} />
         ))}
-        <button onClick={reverse} className="action--camera-reverse">
-          🔄
-        </button>
+        <IconButton
+          onClick={reverse}
+          sx={{
+            padding: "0.1em 0.2em",
+            fontSize: "1.5em",
+            position: "absolute",
+            top: "1em",
+            right: "1em",
+          }}
+        >
+          <Cameraswitch />
+        </IconButton>
       </div>
       <div className="main-actions">
-        <button onClick={capture} className="action--take-photo">
-          📷 Take picture
-        </button>
+        <Button
+          onClick={capture}
+          startIcon={<CameraAlt />}
+          variant="contained"
+          size="large"
+          sx={{
+            width: "100%",
+          }}
+        >
+          Take Picture
+        </Button>
       </div>
       <FrameList />
       {images.length > 0 && (
@@ -86,10 +109,19 @@ const ProjectEditor = () => {
           }}
         >
           <img className="video-preview--image" src={images[0].src} />
-          <div className="video-preview--icon">▶️</div>
+          <PlayCircle
+            sx={{
+              position: "absolute",
+              top: "calc(50% - 0.5em)",
+              left: "calc(50% - 0.5em)",
+              fontSize: "8em",
+              opacity: 0.8,
+              color: "white",
+            }}
+          />
         </a>
       )}
-    </div>
+    </Container>
   );
 };
 
@@ -106,17 +138,30 @@ const VideoPreview = ({ onClose }: IVideoPreviewProps) => {
   }, [dispatch]);
 
   return (
-    <div className="content">
+    <Container maxWidth="sm">
       <video className="preview" src={previewVideo} controls />
-      <div className="main-actions">
-        <button className="action--back" onClick={onClose}>
-          ⬅️ Back
-        </button>
-        <a href={previewVideo} download="video.webm">
-          <button className="action--download-video">🔽 Download</button>
-        </a>
-      </div>
-    </div>
+      <Box sx={{ display: "flex", gap: "0.5em" }}>
+        <Button
+          onClick={onClose}
+          startIcon={<ChevronLeft />}
+          size="large"
+          sx={{ flexGrow: 1 }}
+          variant="contained"
+        >
+          Back
+        </Button>
+        <Button
+          component="a"
+          href={previewVideo}
+          download="video.webm"
+          startIcon={<CloudDownload />}
+          size="large"
+          variant="outlined"
+        >
+          Download
+        </Button>
+      </Box>
+    </Container>
   );
 };
 
