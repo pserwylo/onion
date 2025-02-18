@@ -1,11 +1,15 @@
 import { openDB } from "idb";
 
-export const db = async () =>
-  openDB("db", 1, {
-    upgrade(d) {
-      console.log("Creating initial object store: images");
-      d.createObjectStore("images", {
-        autoIncrement: true,
-      });
-    },
-  });
+export const db = await openDB("db", 1, {
+  upgrade(d) {
+    const images = d.createObjectStore("images", {
+      keyPath: "id",
+    });
+
+    images.createIndex("project", "project");
+
+    d.createObjectStore("projects", {
+      keyPath: "id",
+    });
+  },
+});

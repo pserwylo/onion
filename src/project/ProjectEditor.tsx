@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
   addImage,
-  IImageDTO,
   loadImages,
   removeImage,
   selectImages,
@@ -58,7 +57,7 @@ const ProjectEditor = () => {
         />
 
         {onionSkinImages.map((image) => (
-          <img className="onion-skin" src={image.src} key={image.id} />
+          <img className="onion-skin" src={image.data} key={image.id} />
         ))}
         <IconButton
           onClick={reverse}
@@ -89,7 +88,7 @@ const ProjectEditor = () => {
       <FrameList />
       {images.length > 0 && (
         <Link className="video-preview--wrapper" to="/preview">
-          <img className="video-preview--image" src={images[0].src} />
+          <img className="video-preview--image" src={images[0].data} />
           <PlayCircle
             sx={{
               position: "absolute",
@@ -110,8 +109,8 @@ const FrameList = () => {
   const images = useSelector(selectImages);
   const dispatch = useAppDispatch();
 
-  const handleDelete = (image: IImageDTO) => {
-    dispatch(removeImage(image.id));
+  const handleDelete = (imageId: string) => {
+    dispatch(removeImage(imageId));
   };
 
   return (
@@ -119,10 +118,10 @@ const FrameList = () => {
       <ul className="frames">
         {images.toReversed().map((image, i) => (
           <Frame
-            image={image.src}
+            image={image.data}
             key={i}
             index={images.length - i}
-            onDelete={() => handleDelete(image)}
+            onDelete={() => handleDelete(image.id)}
           />
         ))}
       </ul>

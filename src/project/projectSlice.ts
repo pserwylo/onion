@@ -8,19 +8,12 @@ import type { RootState } from "../store/store";
 import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
 import { db } from "../store/db.ts";
+import { v7 as uuid } from "uuid";
 
 export const loadImages = createAsyncThunk(
   "project/loadImages",
   async (_: void, { dispatch }) => {
-    const d = await db();
-    const keys = (await d.getAllKeys("images")) as string[];
-    const images: IImageDTO[] = await Promise.all(
-      keys.map(async (id) => {
-        const src = await d.get("images", id);
-        return { id, src };
-      }),
-    );
-
+    const images = await db.getAll("images");
     dispatch(projectSlice.actions.setImages(images));
   },
 );
@@ -31,7 +24,7 @@ export const generatePreviewVideo = createAsyncThunk(
     const { frameRate } = selectProjectOptions(getState() as RootState);
     const images = selectImages(getState() as RootState);
     const video = Whammy.fromImageArray(
-      images.map((i) => i.src),
+      images.map((i) => i.data),
       frameRate,
     ) as Blob;
     const data = await blobToDataURL(video);
@@ -40,14 +33,23 @@ export const generatePreviewVideo = createAsyncThunk(
   },
 );
 
+type ImageDTO = {
+  id: string;
+  data: string;
+  project: string;
+  duration?: number;
+};
+
 export const addImage = createAsyncThunk(
   "project/addImage",
-  async (image: string, { dispatch }) => {
-    const d = await db();
-    const id = (await d.put("images", image)) as string;
-
-    const imageDto: IImageDTO = { id, src: image };
-    dispatch(projectSlice.actions.addImage(imageDto));
+  async (data: string, { dispatch }) => {
+    const image: ImageDTO = {
+      id: uuid(),
+      data,
+      project: "1",
+    };
+    await db.put("images", image);
+    dispatch(projectSlice.actions.addImage(image));
   },
 );
 
@@ -56,15 +58,9 @@ export const removeImage = createAsyncThunk(
   async (imageId: string, { dispatch }) => {
     dispatch(projectSlice.actions.removeImage(imageId));
 
-    const d = await db();
-    await d.delete("images", imageId);
+    await db.delete("images", imageId);
   },
 );
-
-export type IImageDTO = {
-  id: string;
-  src: string;
-};
 
 export const projectSlice = createSlice({
   name: "project",
@@ -74,14 +70,14 @@ export const projectSlice = createSlice({
       frameRate: 5,
       numOnionSkins: 1,
     },
-    images: [] as IImageDTO[],
+    images: [] as ImageDTO[],
     previewVideo: undefined as undefined | string,
   },
   reducers: {
-    setImages: (state, action: PayloadAction<IImageDTO[]>) => {
+    setImages: (state, action: PayloadAction<ImageDTO[]>) => {
       state.images = action.payload;
     },
-    addImage: (state, action: PayloadAction<IImageDTO>) => {
+    addImage: (state, action: PayloadAction<ImageDTO>) => {
       state.images.push(action.payload);
     },
     removeImage: (state, action: PayloadAction<string>) => {
