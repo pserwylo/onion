@@ -7,21 +7,29 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
 import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
-import { db } from "../store/db.ts";
+import { db, ImageDTO, ProjectDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 
-export const loadImages = createAsyncThunk(
-  "project/loadImages",
-  async (_: void, { dispatch }) => {
-    const images = await db.getAll("images");
-    dispatch(projectSlice.actions.setImages(images));
+export const loadProject = createAsyncThunk(
+  "project/loadProject",
+  async (projectId: string, { dispatch }) => {
+    const project = await db.get("projects", projectId);
+    if (project !== undefined) {
+      const images = await db.getAll("images");
+      dispatch(
+        projectSlice.actions.initProject({
+          project,
+          images,
+        }),
+      );
+    }
   },
 );
 
 export const generatePreviewVideo = createAsyncThunk(
   "project/appendImageAndRefreshPreviewVideo",
   async (_: void, { getState, dispatch }) => {
-    const { frameRate } = selectProjectOptions(getState() as RootState);
+    const { frameRate } = selectProject(getState() as RootState);
     const images = selectImages(getState() as RootState);
     const video = Whammy.fromImageArray(
       images.map((i) => i.data),
@@ -33,20 +41,14 @@ export const generatePreviewVideo = createAsyncThunk(
   },
 );
 
-type ImageDTO = {
-  id: string;
-  data: string;
-  project: string;
-  duration?: number;
-};
-
 export const addImage = createAsyncThunk(
   "project/addImage",
-  async (data: string, { dispatch }) => {
+  async (data: string, { dispatch, getState }) => {
+    const { id: project } = selectProject(getState() as RootState);
     const image: ImageDTO = {
       id: uuid(),
       data,
-      project: "1",
+      project,
     };
     await db.put("images", image);
     dispatch(projectSlice.actions.addImage(image));
@@ -64,18 +66,22 @@ export const removeImage = createAsyncThunk(
 
 export const projectSlice = createSlice({
   name: "project",
-  // `createSlice` will infer the state type from the `initialState` argument
   initialState: {
-    options: {
+    project: {
+      id: "1",
       frameRate: 5,
       numOnionSkins: 1,
-    },
+    } as ProjectDTO,
     images: [] as ImageDTO[],
     previewVideo: undefined as undefined | string,
   },
   reducers: {
-    setImages: (state, action: PayloadAction<ImageDTO[]>) => {
-      state.images = action.payload;
+    initProject: (
+      state,
+      action: PayloadAction<{ project: ProjectDTO; images: ImageDTO[] }>,
+    ) => {
+      state.images = action.payload.images;
+      state.project = action.payload.project;
     },
     addImage: (state, action: PayloadAction<ImageDTO>) => {
       state.images.push(action.payload);
@@ -92,13 +98,12 @@ export const projectSlice = createSlice({
 // export const {} = projectSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
+export const selectProject = (state: RootState) => state.projects.project;
 export const selectImages = (state: RootState) => state.projects.images;
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
-export const selectProjectOptions = (state: RootState) =>
-  state.projects.options;
 export const selectOnionSkinImages = createSelector(
-  [selectImages, selectProjectOptions],
+  [selectImages, selectProject],
   (images, { numOnionSkins }) =>
     images
       .slice(images.length - Math.min(numOnionSkins, images.length))

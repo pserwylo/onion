@@ -2,7 +2,7 @@ import "./App.css";
 import ProjectEditor from "./project/ProjectEditor.tsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
-import { HashRouter, Route, Routes } from "react-router";
+import { HashRouter, Route, Routes, useNavigate } from "react-router";
 
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -10,9 +10,10 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import theme from "./theme.tsx";
 import VideoPreview from "./project/VideoPreview.tsx";
+import { db } from "./store/db.ts";
 
 function App() {
   return (
@@ -23,8 +24,12 @@ function App() {
             <CssBaseline />
             <HashRouter>
               <Routes>
-                <Route index element={<ProjectEditor />} />
-                <Route path="/preview" element={<VideoPreview />} />
+                <Route index element={<HomePage />} />
+                <Route path="/project/:projectId" element={<ProjectEditor />} />
+                <Route
+                  path="/project/:projectId/preview"
+                  element={<VideoPreview />}
+                />
               </Routes>
             </HashRouter>
           </ThemeProvider>
@@ -33,5 +38,23 @@ function App() {
     </>
   );
 }
+
+/**
+ * For now, pick the first project in the store and redirect to it.
+ */
+const HomePage = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const tx = db.transaction("projects");
+    (async function () {
+      for await (const cursor of tx.store) {
+        navigate(`/project/${cursor.value.id}`);
+        break;
+      }
+    })();
+  }, []);
+
+  return null;
+};
 
 export default App;

@@ -3,11 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
   addImage,
-  loadImages,
+  loadProject,
   removeImage,
   selectImages,
   selectOnionSkinImages,
-  selectProjectOptions,
+  selectProject,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
 import { Button, Container, IconButton } from "@mui/material";
@@ -24,7 +24,7 @@ const ProjectEditor = () => {
   const webcamRef = useRef<Webcam>(null);
 
   useEffect(() => {
-    dispatch(loadImages());
+    dispatch(loadProject("1"));
   }, [dispatch]);
 
   const capture = useCallback(async () => {
@@ -136,7 +136,7 @@ type IFrameProps = {
 };
 
 const Frame = ({ image, index, onDelete }: IFrameProps) => {
-  const { frameRate } = useSelector(selectProjectOptions);
+  const { frameRate } = useSelector(selectProject);
 
   const calculateFrameTime = (index: number) => {
     return index / frameRate;
