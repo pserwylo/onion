@@ -10,6 +10,38 @@ import { blobToDataURL } from "./projectUtils.ts";
 import { db, ImageDTO, ProjectDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 
+const MAX_ONION_SKINS = 3;
+const FRAME_RATES = [5, 15, 25];
+
+export const toggleOnionSkin = createAsyncThunk(
+  "project/toggleOnionSkin",
+  async (_: void, { getState, dispatch }) => {
+    const project = selectProject(getState() as RootState);
+    const newProject: ProjectDTO = {
+      ...project,
+      numOnionSkins: (project.numOnionSkins + 1) % MAX_ONION_SKINS,
+    };
+    dispatch(projectSlice.actions.setProject(newProject));
+    await db.put("projects", newProject);
+  },
+);
+
+export const toggleFrameRate = createAsyncThunk(
+  "project/toggleFrameRate",
+  async (_: void, { getState, dispatch }) => {
+    const project = selectProject(getState() as RootState);
+    // Even if this is -1 for some reason, the +1 in the next line will make it safely get to 0.
+    const i = FRAME_RATES.indexOf(project.frameRate);
+    const newProject: ProjectDTO = {
+      ...project,
+      frameRate: FRAME_RATES[(i + 1) % FRAME_RATES.length],
+    };
+
+    dispatch(projectSlice.actions.setProject(newProject));
+    await db.put("projects", newProject);
+  },
+);
+
 export const loadProject = createAsyncThunk(
   "project/loadProject",
   async (projectId: string, { dispatch }) => {
@@ -83,6 +115,9 @@ export const projectSlice = createSlice({
       state.images = action.payload.images;
       state.project = action.payload.project;
     },
+    setProject: (state, action: PayloadAction<ProjectDTO>) => {
+      state.project = action.payload;
+    },
     addImage: (state, action: PayloadAction<ImageDTO>) => {
       state.images.push(action.payload);
     },
@@ -94,8 +129,6 @@ export const projectSlice = createSlice({
     },
   },
 });
-
-// export const {} = projectSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectProject = (state: RootState) => state.projects.project;

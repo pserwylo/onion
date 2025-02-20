@@ -8,10 +8,26 @@ import {
   selectImages,
   selectOnionSkinImages,
   selectProject,
+  toggleFrameRate,
+  toggleOnionSkin,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
-import { Button, Container, IconButton } from "@mui/material";
-import { CameraAlt, Cameraswitch, PlayCircle } from "@mui/icons-material";
+import {
+  Badge,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import {
+  CameraAlt,
+  Cameraswitch,
+  Layers,
+  LayersClear,
+  PlayCircle,
+  Speed,
+} from "@mui/icons-material";
 import { Link, useParams } from "react-router";
 
 const ProjectEditor = () => {
@@ -67,18 +83,34 @@ const ProjectEditor = () => {
         {onionSkinImages.map((image) => (
           <img className="onion-skin" src={image.data} key={image.id} />
         ))}
-        <IconButton
-          onClick={reverse}
+        <Box
           sx={{
             padding: "0.1em 0.2em",
             fontSize: "1.5em",
             position: "absolute",
+            display: "flex",
             top: "1em",
             right: "1em",
           }}
         >
-          <Cameraswitch />
-        </IconButton>
+          <Tooltip title="Frame rate (fps)">
+            <IconButton onClick={() => dispatch(toggleFrameRate())}>
+              <Badge badgeContent={project.frameRate}>
+                <Speed />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Onion skin">
+            <IconButton onClick={() => dispatch(toggleOnionSkin())}>
+              <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Switch camera">
+            <IconButton onClick={reverse}>
+              <Cameraswitch />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </div>
       <div className="main-actions">
         <Button
@@ -116,6 +148,26 @@ const ProjectEditor = () => {
   );
 };
 
+type IOnionSkinButtons = {
+  numOnionSkins: number;
+};
+
+const OnionSkinIcon = ({ numOnionSkins }: IOnionSkinButtons) => {
+  if (numOnionSkins === 0) {
+    return <LayersClear />;
+  }
+
+  if (numOnionSkins === 1) {
+    return <Layers />;
+  }
+
+  return (
+    <Badge badgeContent={numOnionSkins}>
+      <Layers />
+    </Badge>
+  );
+};
+
 const FrameList = () => {
   const images = useSelector(selectImages);
   const dispatch = useAppDispatch();
@@ -150,7 +202,7 @@ const Frame = ({ image, index, onDelete }: IFrameProps) => {
   const { frameRate } = useSelector(selectProject);
 
   const calculateFrameTime = (index: number) => {
-    return index / frameRate;
+    return (index / frameRate).toFixed(1);
   };
 
   return (
