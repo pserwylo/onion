@@ -12,20 +12,24 @@ import {
 import { useSelector } from "react-redux";
 import { Button, Container, IconButton } from "@mui/material";
 import { CameraAlt, Cameraswitch, PlayCircle } from "@mui/icons-material";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 
 const ProjectEditor = () => {
+  const { projectId } = useParams<{ projectId: string }>();
   const dispatch = useAppDispatch();
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const images = useSelector(selectImages);
+  const project = useSelector(selectProject);
   const [selfieCam, setSelfieCam] = useState(false);
 
   // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
   const webcamRef = useRef<Webcam>(null);
 
   useEffect(() => {
-    dispatch(loadProject("1"));
-  }, [dispatch]);
+    if (projectId) {
+      dispatch(loadProject(projectId));
+    }
+  }, [dispatch, projectId]);
 
   const capture = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -42,6 +46,10 @@ const ProjectEditor = () => {
     width: 640,
     facingMode: selfieCam ? "user" : "environment",
   };
+
+  if (project == null) {
+    return null;
+  }
 
   return (
     <Container maxWidth="sm">
@@ -87,7 +95,10 @@ const ProjectEditor = () => {
       </div>
       <FrameList />
       {images.length > 0 && (
-        <Link className="video-preview--wrapper" to="/preview">
+        <Link
+          className="video-preview--wrapper"
+          to={`/project/${project.id}/preview`}
+        >
           <img className="video-preview--image" src={images[0].data} />
           <PlayCircle
             sx={{
