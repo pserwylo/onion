@@ -13,8 +13,10 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import React, { useEffect } from "react";
 import theme from "./theme.tsx";
 import VideoPreview from "./project/VideoPreview.tsx";
-import { db } from "./store/db.ts";
 import FrameEditor from "./project/FrameEditor.tsx";
+import { useAppDispatch } from "./store/hooks.ts";
+import { initialiseNewProject } from "./project/projectSlice.ts";
+import { getDB } from "./store/db.ts";
 
 function App() {
   return (
@@ -49,15 +51,24 @@ function App() {
  */
 const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   useEffect(() => {
-    const tx = db.transaction("projects");
     (async function () {
+      const db = await getDB();
+      const tx = db.transaction("projects");
       for await (const cursor of tx.store) {
+        console.info(`Navigating to first project: ${cursor.value.id}`);
         navigate(`/project/${cursor.value.id}`);
-        break;
+        return;
       }
+
+      // If none were found, create one, then navigate there.
+      console.info("No projects found yet. Creating new project.");
+      const { payload: id } = await dispatch(initialiseNewProject());
+      navigate(`/project/${id}`);
     })();
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   return null;
 };

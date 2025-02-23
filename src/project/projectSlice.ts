@@ -7,11 +7,26 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
 import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
-import { db, ImageDTO, ProjectDTO } from "../store/db.ts";
+import { getDB, ImageDTO, ProjectDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 
 const MAX_ONION_SKINS = 3;
 const FRAME_RATES = [5, 15, 25];
+
+export const initialiseNewProject = createAsyncThunk(
+  "project/initialiseNewProject",
+  async () => {
+    const project: ProjectDTO = {
+      id: uuid(),
+      frameRate: FRAME_RATES[0],
+      numOnionSkins: 1,
+    };
+
+    const db = await getDB();
+    await db.put("projects", project);
+    return project.id;
+  },
+);
 
 export const toggleOnionSkin = createAsyncThunk(
   "project/toggleOnionSkin",
@@ -22,6 +37,7 @@ export const toggleOnionSkin = createAsyncThunk(
       numOnionSkins: (project.numOnionSkins + 1) % MAX_ONION_SKINS,
     };
     dispatch(projectSlice.actions.setProject(newProject));
+    const db = await getDB();
     await db.put("projects", newProject);
   },
 );
@@ -38,6 +54,7 @@ export const toggleFrameRate = createAsyncThunk(
     };
 
     dispatch(projectSlice.actions.setProject(newProject));
+    const db = await getDB();
     await db.put("projects", newProject);
   },
 );
@@ -45,6 +62,7 @@ export const toggleFrameRate = createAsyncThunk(
 export const loadProject = createAsyncThunk(
   "project/loadProject",
   async (projectId: string, { dispatch }) => {
+    const db = await getDB();
     const project = await db.get("projects", projectId);
     if (project !== undefined) {
       const images = await db.getAll("images");
@@ -61,6 +79,7 @@ export const loadProject = createAsyncThunk(
 export const loadFrame = createAsyncThunk(
   "project/loadFrame",
   async (frameId: string, { dispatch }) => {
+    const db = await getDB();
     const frame = await db.get("images", frameId);
     if (frame === undefined) {
       return;
@@ -94,17 +113,29 @@ export const addImage = createAsyncThunk(
       data,
       project,
     };
-    await db.put("images", image);
     dispatch(projectSlice.actions.addImage(image));
+
+    // Do this last and don't wait for it - it slows the UX down too much.
+    const db = await getDB();
+    db.put("images", image);
   },
 );
 
-export const removeImage = createAsyncThunk(
-  "project/removeImage",
-  async (imageId: string, { dispatch }) => {
-    dispatch(projectSlice.actions.removeImage(imageId));
+export const removeSelectedImages = createAsyncThunk(
+  "project/removeSelectedImages",
+  async (_: void, { dispatch, getState }) => {
+    const imagesToRemove = selectSelectedImageIds(getState() as RootState);
+    console.info(`Deleting frames: ${imagesToRemove.join(", ")}`);
 
-    await db.delete("images", imageId);
+    // Do this last and don't wait for it - it slows the UX down too much.
+    const db = await getDB();
+    const tx = db.transaction("images", "readwrite");
+    for (const imageId of imagesToRemove) {
+      console.info(`Removing frame: ${imageId}`);
+      tx.store.delete(imageId);
+    }
+
+    dispatch(projectSlice.actions.removeSelectedImages());
   },
 );
 
@@ -118,6 +149,7 @@ export const projectSlice = createSlice({
     } as ProjectDTO,
     frameToEdit: undefined as ImageDTO | undefined,
     images: [] as ImageDTO[],
+    selectedImageIds: [] as string[],
     previewVideo: undefined as undefined | string,
   },
   reducers: {
@@ -131,11 +163,30 @@ export const projectSlice = createSlice({
     setProject: (state, action: PayloadAction<ProjectDTO>) => {
       state.project = action.payload;
     },
+    setImageSelected: (
+      state,
+      action: PayloadAction<{ imageId: string; selected: boolean }>,
+    ) => {
+      const { imageId, selected } = action.payload;
+      if (selected && !state.selectedImageIds.includes(imageId)) {
+        state.selectedImageIds.push(imageId);
+      } else if (!selected && state.selectedImageIds.includes(imageId)) {
+        state.selectedImageIds = state.selectedImageIds.filter(
+          (i) => i !== imageId,
+        );
+      }
+    },
     addImage: (state, action: PayloadAction<ImageDTO>) => {
       state.images.push(action.payload);
     },
     removeImage: (state, action: PayloadAction<string>) => {
       state.images = state.images.filter((i) => i.id !== action.payload);
+    },
+    removeSelectedImages: (state) => {
+      state.images = state.images.filter(
+        (i) => !state.selectedImageIds.includes(i.id),
+      );
+      state.selectedImageIds = [];
     },
     updatePreviewVideo: (state, action: PayloadAction<string>) => {
       state.previewVideo = action.payload;
@@ -160,5 +211,8 @@ export const selectOnionSkinImages = createSelector(
       .slice(images.length - Math.min(numOnionSkins, images.length))
       .reverse(),
 );
+export const selectSelectedImageIds = (state: RootState) =>
+  state.projects.selectedImageIds;
 
+export const { setImageSelected } = projectSlice.actions;
 export default projectSlice.reducer;

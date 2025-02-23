@@ -1,5 +1,4 @@
 import { DBSchema, openDB } from "idb";
-import { v7 as uuid } from "uuid";
 
 export type ProjectDTO = {
   id: string;
@@ -26,28 +25,17 @@ interface OnionDB extends DBSchema {
   };
 }
 
-let shouldInit = false;
+export const getDB = async () =>
+  await openDB<OnionDB>("db", 1, {
+    upgrade(d) {
+      const images = d.createObjectStore("images", {
+        keyPath: "id",
+      });
 
-export const db = await openDB<OnionDB>("db", 1, {
-  upgrade(d) {
-    shouldInit = true;
+      images.createIndex("project", "project");
 
-    const images = d.createObjectStore("images", {
-      keyPath: "id",
-    });
-
-    images.createIndex("project", "project");
-
-    d.createObjectStore("projects", {
-      keyPath: "id",
-    });
-  },
-});
-
-if (shouldInit) {
-  await db.put("projects", {
-    id: uuid(),
-    numOnionSkins: 1,
-    frameRate: 15,
+      d.createObjectStore("projects", {
+        keyPath: "id",
+      });
+    },
   });
-}
