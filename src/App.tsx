@@ -14,6 +14,7 @@ import React, { useEffect } from "react";
 import theme from "./theme.tsx";
 import VideoPreview from "./project/VideoPreview.tsx";
 import { db } from "./store/db.ts";
+import FrameEditor from "./project/FrameEditor.tsx";
 
 function App() {
   return (
@@ -26,6 +27,10 @@ function App() {
               <Routes>
                 <Route index element={<HomePage />} />
                 <Route path="/project/:projectId" element={<ProjectEditor />} />
+                <Route
+                  path="/project/:projectId/frame/:frameId"
+                  element={<FrameEditor />}
+                />
                 <Route
                   path="/project/:projectId/preview"
                   element={<VideoPreview />}
@@ -52,7 +57,7 @@ const HomePage = () => {
         break;
       }
     })();
-  }, []);
+  }, [navigate]);
 
   return null;
 };

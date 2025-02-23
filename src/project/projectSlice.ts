@@ -58,6 +58,18 @@ export const loadProject = createAsyncThunk(
   },
 );
 
+export const loadFrame = createAsyncThunk(
+  "project/loadFrame",
+  async (frameId: string, { dispatch }) => {
+    const frame = await db.get("images", frameId);
+    if (frame === undefined) {
+      return;
+    }
+
+    dispatch(projectSlice.actions.setFrameToEdit(frame));
+  },
+);
+
 export const generatePreviewVideo = createAsyncThunk(
   "project/appendImageAndRefreshPreviewVideo",
   async (_: void, { getState, dispatch }) => {
@@ -104,6 +116,7 @@ export const projectSlice = createSlice({
       frameRate: 5,
       numOnionSkins: 1,
     } as ProjectDTO,
+    frameToEdit: undefined as ImageDTO | undefined,
     images: [] as ImageDTO[],
     previewVideo: undefined as undefined | string,
   },
@@ -127,12 +140,17 @@ export const projectSlice = createSlice({
     updatePreviewVideo: (state, action: PayloadAction<string>) => {
       state.previewVideo = action.payload;
     },
+    setFrameToEdit: (state, action: PayloadAction<ImageDTO>) => {
+      state.frameToEdit = action.payload;
+    },
   },
 });
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectProject = (state: RootState) => state.projects.project;
 export const selectImages = (state: RootState) => state.projects.images;
+export const selectFrameToEdit = (state: RootState) =>
+  state.projects.frameToEdit;
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
 export const selectOnionSkinImages = createSelector(
