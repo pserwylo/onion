@@ -1,29 +1,122 @@
-import { useParams } from "react-router";
-import { useEffect } from "react";
-import { loadFrame, selectFrameToEdit } from "./projectSlice.ts";
+import { Link, useParams } from "react-router";
+import { loadProject, selectImages, setFrameDuration } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+} from "@mui/material";
+import { ChevronLeft, Close, Pause } from "@mui/icons-material";
+import { useEffect } from "react";
 
 const FrameEditor = () => {
   const dispatch = useAppDispatch();
-  const { frameId } = useParams<{
+  const { projectId, frameId } = useParams<{
+    projectId: string;
     frameId: string;
   }>();
-  const frame = useSelector(selectFrameToEdit);
+  const allFrames = useSelector(selectImages);
 
   useEffect(() => {
-    if (frameId === undefined) {
-      return;
+    if (projectId) {
+      dispatch(loadProject(projectId));
     }
+  }, [dispatch, projectId]);
 
-    dispatch(loadFrame(frameId));
-  }, [dispatch, frameId]);
-
-  if (frame == null) {
+  if (frameId == null) {
+    console.warn("No frame ID provided to FrameEditor URL.");
     return null;
   }
 
-  return <img src={frame.data} />;
+  const frame = allFrames.find((f) => f.id === frameId);
+
+  if (frame === undefined) {
+    console.warn(`Couldn't find frameId ${frameId} in frames: `, {
+      images: allFrames,
+    });
+    return null;
+  }
+
+  const handlePause = () => {
+    dispatch(
+      setFrameDuration({
+        imageId: frameId,
+        duration: frame.duration ? undefined : 1,
+      }),
+    );
+  };
+
+  return (
+    <Container maxWidth="sm" className="flex flex-col gap-y-2">
+      <img src={frame.data} alt="image of a video frame" />
+      <Box className="flex gap-4">
+        <div className="flex-grow">
+          <Button
+            component={Link}
+            to={`/project/${projectId}`}
+            className="w-full"
+            startIcon={<ChevronLeft />}
+            variant="contained"
+          >
+            Back
+          </Button>
+        </div>
+        {!frame.duration ? (
+          <Button
+            startIcon={<Pause />}
+            variant="outlined"
+            onClick={handlePause}
+          >
+            Pause here
+          </Button>
+        ) : (
+          <>
+            <FormControl variant="outlined">
+              <InputLabel htmlFor="input-duration">
+                Duration (seconds)
+              </InputLabel>
+              <OutlinedInput
+                id="input-duration"
+                type="number"
+                label="Duration (seconds)"
+                onChange={(e) =>
+                  dispatch(
+                    setFrameDuration({
+                      imageId: frameId,
+                      duration: parseFloat(e.target.value),
+                    }),
+                  )
+                }
+                value={frame.duration}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() =>
+                        dispatch(
+                          setFrameDuration({
+                            imageId: frameId,
+                            duration: 0,
+                          }),
+                        )
+                      }
+                    >
+                      <Close />
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </FormControl>
+          </>
+        )}
+      </Box>
+    </Container>
+  );
 };
 
 export default FrameEditor;

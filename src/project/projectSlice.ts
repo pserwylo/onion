@@ -42,6 +42,31 @@ export const toggleOnionSkin = createAsyncThunk(
   },
 );
 
+export const setFrameDuration = createAsyncThunk(
+  "project/setFrameDuration",
+  async (
+    { imageId, duration }: { imageId: string; duration: number | undefined },
+    { getState, dispatch },
+  ) => {
+    const image = selectImages(getState() as RootState).find(
+      (i) => i.id === imageId,
+    );
+
+    if (image === undefined) {
+      return;
+    }
+
+    const newImage: ImageDTO = {
+      ...image,
+      duration,
+    };
+
+    dispatch(projectSlice.actions.updateImage(newImage));
+    const db = await getDB();
+    await db.put("images", newImage);
+  },
+);
+
 export const toggleFrameRate = createAsyncThunk(
   "project/toggleFrameRate",
   async (_: void, { getState, dispatch }) => {
@@ -61,7 +86,13 @@ export const toggleFrameRate = createAsyncThunk(
 
 export const loadProject = createAsyncThunk(
   "project/loadProject",
-  async (projectId: string, { dispatch }) => {
+  async (projectId: string, { dispatch, getState }) => {
+    const existingProject = selectProject(getState() as RootState);
+    if (existingProject?.id === projectId) {
+      console.debug(`No need to load project ${projectId}, already loaded.`);
+      return;
+    }
+
     const db = await getDB();
     const project = await db.get("projects", projectId);
     if (project !== undefined) {
@@ -76,26 +107,19 @@ export const loadProject = createAsyncThunk(
   },
 );
 
-export const loadFrame = createAsyncThunk(
-  "project/loadFrame",
-  async (frameId: string, { dispatch }) => {
-    const db = await getDB();
-    const frame = await db.get("images", frameId);
-    if (frame === undefined) {
-      return;
-    }
-
-    dispatch(projectSlice.actions.setFrameToEdit(frame));
-  },
-);
-
 export const generatePreviewVideo = createAsyncThunk(
   "project/appendImageAndRefreshPreviewVideo",
   async (_: void, { getState, dispatch }) => {
     const { frameRate } = selectProject(getState() as RootState);
     const images = selectImages(getState() as RootState);
     const video = Whammy.fromImageArray(
-      images.map((i) => i.data),
+      images
+        .map((i) =>
+          i.duration
+            ? new Array<string>(frameRate * i.duration).fill(i.data)
+            : i.data,
+        )
+        .flat(),
       frameRate,
     ) as Blob;
     const data = await blobToDataURL(video);
@@ -147,7 +171,6 @@ export const projectSlice = createSlice({
       frameRate: 5,
       numOnionSkins: 1,
     } as ProjectDTO,
-    frameToEdit: undefined as ImageDTO | undefined,
     images: [] as ImageDTO[],
     selectedImageIds: [] as string[],
     previewVideo: undefined as undefined | string,
@@ -159,6 +182,10 @@ export const projectSlice = createSlice({
     ) => {
       state.images = action.payload.images;
       state.project = action.payload.project;
+    },
+    updateImage: (state, action: PayloadAction<ImageDTO>) => {
+      const image = action.payload;
+      state.images = state.images.map((i) => (i.id === image.id ? image : i));
     },
     setProject: (state, action: PayloadAction<ProjectDTO>) => {
       state.project = action.payload;
@@ -191,17 +218,12 @@ export const projectSlice = createSlice({
     updatePreviewVideo: (state, action: PayloadAction<string>) => {
       state.previewVideo = action.payload;
     },
-    setFrameToEdit: (state, action: PayloadAction<ImageDTO>) => {
-      state.frameToEdit = action.payload;
-    },
   },
 });
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectProject = (state: RootState) => state.projects.project;
 export const selectImages = (state: RootState) => state.projects.images;
-export const selectFrameToEdit = (state: RootState) =>
-  state.projects.frameToEdit;
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
 export const selectOnionSkinImages = createSelector(

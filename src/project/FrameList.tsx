@@ -1,23 +1,23 @@
-import { useNavigate, useParams } from "react-router";
+import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
   removeSelectedImages,
   selectImages,
-  selectProject,
   selectSelectedImageIds,
   setImageSelected,
 } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { Box, Button, Checkbox } from "@mui/material";
-import { Delete, Edit, Settings } from "@mui/icons-material";
+import { Delete, Edit, Pause, Settings } from "@mui/icons-material";
 import clsx from "clsx";
+import { ImageDTO, ProjectDTO } from "../store/db.ts";
 
 type IFrameListProps = {
+  project: ProjectDTO;
   className?: string;
 };
 
-const FrameList = ({ className }: IFrameListProps) => {
-  const { projectId } = useParams<{ projectId: string }>();
+const FrameList = ({ project, className }: IFrameListProps) => {
   const images = useSelector(selectImages);
   const dispatch = useAppDispatch();
   const selectedImageIds = useSelector(selectSelectedImageIds);
@@ -33,18 +33,23 @@ const FrameList = ({ className }: IFrameListProps) => {
     }
 
     const id = selectedImageIds[0];
-    const url = `/project/${projectId!}/frame/${id}`;
+    const url = `/project/${project.id!}/frame/${id}`;
     navigate(url);
   };
 
+  let frameTime = 0;
   return (
     <div className={className}>
-      <ul className="flex list-none overflow-x-scroll flex-nowrap flex-row-reverse gap-2">
-        {images.toReversed().map((image, i) => (
+      <ul className="flex list-none overflow-x-scroll flex-nowrap gap-2">
+        {images.map((image, i) => (
           <li key={image.id}>
             <Frame
-              imageId={image.id}
-              imageData={image.data}
+              image={image}
+              time={
+                (frameTime =
+                  frameTime +
+                  (image.duration ? image.duration : 1 / project.frameRate))
+              }
               key={i}
               index={images.length - i}
               selected={selectedImageIds.includes(image.id)}
@@ -80,21 +85,16 @@ const FrameList = ({ className }: IFrameListProps) => {
 };
 
 type IFrameProps = {
-  imageId: string;
-  imageData: string;
+  image: ImageDTO;
+  time: number;
   index: number;
   selected: boolean;
 };
 
-const Frame = ({ imageId, imageData, index, selected }: IFrameProps) => {
-  const { frameRate } = useSelector(selectProject);
+const Frame = ({ image, index, time, selected }: IFrameProps) => {
   const selectedImageIds = useSelector(selectSelectedImageIds);
   const isAnySelected = selectedImageIds.length > 0;
   const dispatch = useAppDispatch();
-
-  const calculateFrameTime = (index: number) => {
-    return (index / frameRate).toFixed(1);
-  };
 
   return (
     <Box
@@ -113,7 +113,7 @@ const Frame = ({ imageId, imageData, index, selected }: IFrameProps) => {
       onClick={() =>
         dispatch(
           setImageSelected({
-            imageId,
+            imageId: image.id,
             selected: !selected,
           }),
         )
@@ -121,7 +121,7 @@ const Frame = ({ imageId, imageData, index, selected }: IFrameProps) => {
     >
       <img
         alt="thumbnail of animation frame"
-        src={imageData}
+        src={image.data}
         className="w-24 max-w-24"
       />
       <Checkbox
@@ -136,9 +136,14 @@ const Frame = ({ imageId, imageData, index, selected }: IFrameProps) => {
           },
         }}
       />
-      <OverlayText className="absolute bottom-1 left-1">{index}</OverlayText>
-      <OverlayText className="absolute bottom-1 right-1">
-        {calculateFrameTime(index)}s
+      {image.duration !== undefined && image.duration > 0 && (
+        <OverlayText className="absolute top-1 left-1">
+          <Pause />
+        </OverlayText>
+      )}
+      <OverlayText className="absolute bottom-1 left-2">{index}</OverlayText>
+      <OverlayText className="absolute bottom-1 right-2">
+        {time.toFixed(1)}s
       </OverlayText>
       <div className="frame--actions">
         <Settings

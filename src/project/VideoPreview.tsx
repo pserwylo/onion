@@ -15,8 +15,8 @@ const VideoPreview = () => {
   }, [dispatch]);
 
   return (
-    <Container maxWidth="sm">
-      <video className="my-2" src={previewVideo} controls autoPlay={true} />
+    <Container maxWidth="sm" className="flex flex-col gap-y-2">
+      <video src={previewVideo} controls autoPlay={true} />
       <Box className="flex gap-4">
         <Button
           component={Link}

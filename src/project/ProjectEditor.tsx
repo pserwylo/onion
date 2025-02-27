@@ -176,7 +176,7 @@ const ProjectEditor = () => {
 
       {images.length > 0 && (
         <>
-          <FrameList className="w-full mb-2" />
+          <FrameList project={project} className="w-full mb-2" />
           <VideoPreviewLink projectId={project.id} imageData={images[0].data} />
         </>
       )}
