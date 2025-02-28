@@ -11,7 +11,7 @@ import { getDB, ImageDTO, ProjectDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 
 const MAX_ONION_SKINS = 3;
-const FRAME_RATES = [5, 15, 25];
+export const FRAME_RATES = [5, 15, 25];
 
 export const initialiseNewProject = createAsyncThunk(
   "project/initialiseNewProject",

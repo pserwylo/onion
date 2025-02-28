@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import projects from "../project/projectSlice";
+import home from "../home/homeSlice";
 
 export const store = configureStore({
   reducer: {
     projects,
+    home,
   },
 });
 
