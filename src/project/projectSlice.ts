@@ -13,21 +13,6 @@ import { v7 as uuid } from "uuid";
 const MAX_ONION_SKINS = 3;
 export const FRAME_RATES = [5, 15, 25];
 
-export const initialiseNewProject = createAsyncThunk(
-  "project/initialiseNewProject",
-  async () => {
-    const project: ProjectDTO = {
-      id: uuid(),
-      frameRate: FRAME_RATES[0],
-      numOnionSkins: 1,
-    };
-
-    const db = await getDB();
-    await db.put("projects", project);
-    return project.id;
-  },
-);
-
 export const toggleOnionSkin = createAsyncThunk(
   "project/toggleOnionSkin",
   async (_: void, { getState, dispatch }) => {
@@ -93,10 +78,11 @@ export const loadProject = createAsyncThunk(
       return;
     }
 
+    console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
     const project = await db.get("projects", projectId);
     if (project !== undefined) {
-      const images = await db.getAll("images");
+      const images = await db.getAllFromIndex("images", "project", project.id);
       dispatch(
         projectSlice.actions.initProject({
           project,

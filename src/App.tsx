@@ -11,7 +11,7 @@ import "@fontsource/roboto/700.css";
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
-import theme from "./theme.tsx";
+import theme from "./theme.ts";
 import VideoPreview from "./project/VideoPreview.tsx";
 import FrameEditor from "./project/FrameEditor.tsx";
 import { HomePage } from "./home/HomePage.tsx";
