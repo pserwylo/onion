@@ -6,17 +6,17 @@ export type ProjectDTO = {
   numOnionSkins: number;
 };
 
-export type ImageDTO = {
+export type FrameDTO = {
   id: string;
-  data: string;
+  image: string;
   project: string;
   duration?: number;
 };
 
 interface OnionDB extends DBSchema {
-  images: {
+  frames: {
     key: string;
-    value: ImageDTO;
+    value: FrameDTO;
     indexes: { project: string };
   };
   projects: {
@@ -28,11 +28,11 @@ interface OnionDB extends DBSchema {
 export const getDB = async () =>
   await openDB<OnionDB>("db", 1, {
     upgrade(d) {
-      const images = d.createObjectStore("images", {
+      const frames = d.createObjectStore("frames", {
         keyPath: "id",
       });
 
-      images.createIndex("project", "project");
+      frames.createIndex("project", "project");
 
       d.createObjectStore("projects", {
         keyPath: "id",

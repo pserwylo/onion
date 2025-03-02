@@ -2,9 +2,9 @@ import Webcam from "react-webcam";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
-  addImage,
+  addFrame,
   loadProject,
-  selectImages,
+  selectFrames,
   selectOnionSkinImages,
   selectProject,
   toggleFrameRate,
@@ -37,7 +37,7 @@ const ProjectEditor = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const dispatch = useAppDispatch();
   const onionSkinImages = useSelector(selectOnionSkinImages);
-  const images = useSelector(selectImages);
+  const frames = useSelector(selectFrames);
   const project = useSelector(selectProject);
   const [selfieCam, setSelfieCam] = useState(false);
   const [webcamStatus, setWebcamStatus] = useState<
@@ -56,7 +56,7 @@ const ProjectEditor = () => {
   const capture = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      dispatch(addImage(imageSrc));
+      dispatch(addFrame(imageSrc));
     }
   }, [dispatch, webcamRef]);
 
@@ -125,7 +125,7 @@ const ProjectEditor = () => {
         {webcamStatus === "connected" && (
           <>
             {onionSkinImages.map((image) => (
-              <img className="onion-skin" src={image.data} key={image.id} />
+              <img className="onion-skin" src={image.image} key={image.id} />
             ))}
 
             <Box
@@ -174,10 +174,13 @@ const ProjectEditor = () => {
         </div>
       )}
 
-      {images.length > 0 && (
+      {frames.length > 0 && (
         <>
           <FrameList project={project} className="w-full mb-2" />
-          <VideoPreviewLink projectId={project.id} imageData={images[0].data} />
+          <VideoPreviewLink
+            projectId={project.id}
+            imageData={frames[0].image}
+          />
         </>
       )}
     </Container>

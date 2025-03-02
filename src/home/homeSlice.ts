@@ -34,17 +34,17 @@ export const loadProjects = createAsyncThunk(
     const db = await getDB();
     const plainProjects = await db.getAll("projects");
     const projectsWithThumbs: ProjectSummaryDTO[] = [];
-    const tx = db.transaction("images");
-    const store = tx.objectStore("images");
+    const tx = db.transaction("frames");
+    const store = tx.objectStore("frames");
     const index = store.index("project");
 
     for (const project of plainProjects) {
       const range = IDBKeyRange.only(project.id);
       const req = await index.openCursor(range);
-      const image = req?.value;
+      const frame = req?.value;
       projectsWithThumbs.push({
         ...project,
-        thumbnail: image?.data,
+        thumbnail: frame?.image,
       });
     }
     dispatch(homeSlice.actions.initProjects(projectsWithThumbs));

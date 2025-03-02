@@ -1,16 +1,16 @@
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
-  removeSelectedImages,
-  selectImages,
-  selectSelectedImageIds,
-  setImageSelected,
+  removeSelectedFrames,
+  selectFrames,
+  selectSelectedFrameIds,
+  setFrameSelected,
 } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { Box, Button, Checkbox } from "@mui/material";
 import { Delete, Edit, Pause, Settings } from "@mui/icons-material";
 import clsx from "clsx";
-import { ImageDTO, ProjectDTO } from "../store/db.ts";
+import { FrameDTO, ProjectDTO } from "../store/db.ts";
 
 type IFrameListProps = {
   project: ProjectDTO;
@@ -18,21 +18,21 @@ type IFrameListProps = {
 };
 
 const FrameList = ({ project, className }: IFrameListProps) => {
-  const images = useSelector(selectImages);
+  const frames = useSelector(selectFrames);
   const dispatch = useAppDispatch();
-  const selectedImageIds = useSelector(selectSelectedImageIds);
+  const selectedFrameIds = useSelector(selectSelectedFrameIds);
   const navigate = useNavigate();
 
   const handleDelete = () => {
-    dispatch(removeSelectedImages());
+    dispatch(removeSelectedFrames());
   };
 
   const handleEdit = () => {
-    if (selectedImageIds.length !== 1) {
+    if (selectedFrameIds.length !== 1) {
       return;
     }
 
-    const id = selectedImageIds[0];
+    const id = selectedFrameIds[0];
     const url = `/project/${project.id!}/frame/${id}`;
     navigate(url);
   };
@@ -41,24 +41,24 @@ const FrameList = ({ project, className }: IFrameListProps) => {
   return (
     <div className={className}>
       <ul className="flex list-none overflow-x-scroll flex-nowrap gap-2">
-        {images.map((image, i) => (
-          <li key={image.id}>
+        {frames.map((frame, i) => (
+          <li key={frame.id}>
             <Frame
-              image={image}
+              frame={frame}
               time={
                 (frameTime =
                   frameTime +
-                  (image.duration ? image.duration : 1 / project.frameRate))
+                  (frame.duration ? frame.duration : 1 / project.frameRate))
               }
               key={i}
-              index={images.length - i}
-              selected={selectedImageIds.includes(image.id)}
+              index={frames.length - i}
+              selected={selectedFrameIds.includes(frame.id)}
             />
           </li>
         ))}
       </ul>
 
-      {selectedImageIds.length > 0 && (
+      {selectedFrameIds.length > 0 && (
         <div className="mt-2 mb-4 flex gap-2">
           <Button
             onClick={handleDelete}
@@ -66,10 +66,10 @@ const FrameList = ({ project, className }: IFrameListProps) => {
             variant="outlined"
             color="error"
           >
-            Delete {selectedImageIds.length} Frame
-            {selectedImageIds.length === 1 ? "" : "s"}
+            Delete {selectedFrameIds.length} Frame
+            {selectedFrameIds.length === 1 ? "" : "s"}
           </Button>
-          {selectedImageIds.length === 1 && (
+          {selectedFrameIds.length === 1 && (
             <Button
               onClick={handleEdit}
               startIcon={<Edit />}
@@ -85,15 +85,15 @@ const FrameList = ({ project, className }: IFrameListProps) => {
 };
 
 type IFrameProps = {
-  image: ImageDTO;
+  frame: FrameDTO;
   time: number;
   index: number;
   selected: boolean;
 };
 
-const Frame = ({ image, index, time, selected }: IFrameProps) => {
-  const selectedImageIds = useSelector(selectSelectedImageIds);
-  const isAnySelected = selectedImageIds.length > 0;
+const Frame = ({ frame, index, time, selected }: IFrameProps) => {
+  const selectedFrameIds = useSelector(selectSelectedFrameIds);
+  const isAnySelected = selectedFrameIds.length > 0;
   const dispatch = useAppDispatch();
 
   return (
@@ -112,8 +112,8 @@ const Frame = ({ image, index, time, selected }: IFrameProps) => {
       }}
       onClick={() =>
         dispatch(
-          setImageSelected({
-            imageId: image.id,
+          setFrameSelected({
+            frameId: frame.id,
             selected: !selected,
           }),
         )
@@ -121,7 +121,7 @@ const Frame = ({ image, index, time, selected }: IFrameProps) => {
     >
       <img
         alt="thumbnail of animation frame"
-        src={image.data}
+        src={frame.image}
         className="w-24 max-w-24"
       />
       <Checkbox
@@ -136,7 +136,7 @@ const Frame = ({ image, index, time, selected }: IFrameProps) => {
           },
         }}
       />
-      {image.duration !== undefined && image.duration > 0 && (
+      {frame.duration !== undefined && frame.duration > 0 && (
         <OverlayText className="absolute top-1 left-1">
           <Pause />
         </OverlayText>

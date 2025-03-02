@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { loadProject, selectImages, setFrameDuration } from "./projectSlice.ts";
+import { loadProject, selectFrames, setFrameDuration } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
 import {
@@ -21,7 +21,7 @@ const FrameEditor = () => {
     projectId: string;
     frameId: string;
   }>();
-  const allFrames = useSelector(selectImages);
+  const allFrames = useSelector(selectFrames);
 
   useEffect(() => {
     if (projectId) {
@@ -46,7 +46,7 @@ const FrameEditor = () => {
   const handlePause = () => {
     dispatch(
       setFrameDuration({
-        imageId: frameId,
+        frameId: frameId,
         duration: frame.duration ? undefined : 1,
       }),
     );
@@ -54,7 +54,7 @@ const FrameEditor = () => {
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2">
-      <img src={frame.data} alt="image of a video frame" />
+      <img src={frame.image} alt="image of a video frame" />
       <Box className="flex gap-4">
         <div className="flex-grow">
           <Button
@@ -88,7 +88,7 @@ const FrameEditor = () => {
                 onChange={(e) =>
                   dispatch(
                     setFrameDuration({
-                      imageId: frameId,
+                      frameId: frameId,
                       duration: parseFloat(e.target.value),
                     }),
                   )
@@ -100,7 +100,7 @@ const FrameEditor = () => {
                       onClick={() =>
                         dispatch(
                           setFrameDuration({
-                            imageId: frameId,
+                            frameId: frameId,
                             duration: 0,
                           }),
                         )
