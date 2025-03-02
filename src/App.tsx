@@ -15,6 +15,7 @@ import theme from "./theme.ts";
 import VideoPreview from "./project/VideoPreview.tsx";
 import FrameEditor from "./project/FrameEditor.tsx";
 import { HomePage } from "./home/HomePage.tsx";
+import { NewProjectPage } from "./new-project/NewProjectPage.tsx";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Routes>
                 <Route index element={<HomePage />} />
                 <Route path="/project/:projectId" element={<ProjectEditor />} />
+                <Route path="/new" element={<NewProjectPage />} />
                 <Route
                   path="/project/:projectId/frame/:frameId"
                   element={<FrameEditor />}

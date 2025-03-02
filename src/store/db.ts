@@ -10,6 +10,14 @@ export type FrameDTO = {
   id: string;
   image: string;
   project: string;
+  scene?: string;
+  duration?: number;
+};
+
+export type SceneDTO = {
+  id: string;
+  image: string;
+  project: string;
   duration?: number;
 };
 
@@ -17,6 +25,11 @@ interface OnionDB extends DBSchema {
   frames: {
     key: string;
     value: FrameDTO;
+    indexes: { project: string; scene: string };
+  };
+  scenes: {
+    key: string;
+    value: SceneDTO;
     indexes: { project: string };
   };
   projects: {
@@ -33,6 +46,13 @@ export const getDB = async () =>
       });
 
       frames.createIndex("project", "project");
+      frames.createIndex("scene", "scene");
+
+      const scenes = d.createObjectStore("scenes", {
+        keyPath: "id",
+      });
+
+      scenes.createIndex("project", "project");
 
       d.createObjectStore("projects", {
         keyPath: "id",
