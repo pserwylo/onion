@@ -15,6 +15,10 @@ import theme from "./theme.ts";
 import VideoPreview from "./project/VideoPreview.tsx";
 import FrameEditor from "./project/FrameEditor.tsx";
 import { HomePage } from "./home/HomePage.tsx";
+import { NewProjectPage } from "./new-project/NewProjectPage.tsx";
+import { StoryboardEditorPage } from "./storyboard-editor/StoryboardEditorPage.tsx";
+import SceneEditor from "./project/SceneEditor.tsx";
+import ScenePhotoEditor from "./project/ScenePhotoEditor.tsx";
 
 function App() {
   return (
@@ -27,6 +31,19 @@ function App() {
               <Routes>
                 <Route index element={<HomePage />} />
                 <Route path="/project/:projectId" element={<ProjectEditor />} />
+                <Route
+                  path="/project/:projectId/storyboard"
+                  element={<StoryboardEditorPage />}
+                />
+                <Route path="/new" element={<NewProjectPage />} />
+                <Route
+                  path="/project/:projectId/scene/:sceneId"
+                  element={<SceneEditor />}
+                />
+                <Route
+                  path="/project/:projectId/scene/:sceneId/photo"
+                  element={<ScenePhotoEditor />}
+                />
                 <Route
                   path="/project/:projectId/frame/:frameId"
                   element={<FrameEditor />}

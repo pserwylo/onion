@@ -1,13 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
-import { getDB, ProjectDTO } from "../store/db.ts";
+import { getDB, ProjectDTO, SceneDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 import { FRAME_RATES } from "../project/projectSlice.ts";
 
 export const addProject = createAsyncThunk(
   "project/initialiseNewProject",
-  async (_: void, { dispatch }) => {
+  async (hasScenes: boolean, { dispatch }) => {
     const project: ProjectDTO = {
       id: uuid(),
       frameRate: FRAME_RATES[0],
@@ -16,6 +16,20 @@ export const addProject = createAsyncThunk(
 
     const db = await getDB();
     await db.put("projects", project);
+
+    if (hasScenes) {
+      const scenes: SceneDTO[] = [];
+      for (let i = 0; i < 10; i++) {
+        scenes.push({
+          id: uuid(),
+          project: project.id,
+        });
+      }
+
+      for (const scene of scenes) {
+        await db.put("scenes", scene);
+      }
+    }
 
     dispatch(
       homeSlice.actions.addProject({
@@ -34,19 +48,63 @@ export const loadProjects = createAsyncThunk(
     const db = await getDB();
     const plainProjects = await db.getAll("projects");
     const projectsWithThumbs: ProjectSummaryDTO[] = [];
-    const tx = db.transaction("frames");
-    const store = tx.objectStore("frames");
-    const index = store.index("project");
 
-    for (const project of plainProjects) {
-      const range = IDBKeyRange.only(project.id);
-      const req = await index.openCursor(range);
-      const frame = req?.value;
+    const thumbFromFrame = async (projectId: string) => {
+      const framesTx = db.transaction("frames");
+      const framesStore = framesTx.objectStore("frames");
+      const framesIndex = framesStore.index("project");
+
+      const range = IDBKeyRange.only(projectId);
+      let cursor = await framesIndex.openCursor(range);
+      while (cursor) {
+        const frame = cursor.value;
+        if (frame.image) {
+          return frame.image;
+        }
+        cursor = await cursor.continue();
+      }
+
+      return undefined;
+    };
+
+    const thumbFromScene = async (projectId: string) => {
+      const scenesTx = db.transaction("scenes");
+      const scenesStore = scenesTx.objectStore("scenes");
+      const scenesIndex = scenesStore.index("project");
+
+      const range = IDBKeyRange.only(projectId);
+      let cursor = await scenesIndex.openCursor(range);
+      while (cursor) {
+        const scene = cursor.value;
+        if (scene.image) {
+          return scene.image;
+        }
+        cursor = await cursor.continue();
+      }
+
+      return undefined;
+    };
+
+    let thumbnail: string | undefined;
+    for await (const project of plainProjects) {
+      const projectId = project.id;
+      thumbnail = await thumbFromFrame(project.id);
+      if (!thumbnail) {
+        thumbnail = await thumbFromScene(project.id);
+      }
+
+      if (thumbnail) {
+        console.log(`${projectId}: found thumbnail.`);
+      } else {
+        console.log(`${projectId}: no thumbnail found.`);
+      }
+
       projectsWithThumbs.push({
         ...project,
-        thumbnail: frame?.image,
+        thumbnail,
       });
     }
+
     dispatch(homeSlice.actions.initProjects(projectsWithThumbs));
   },
 );

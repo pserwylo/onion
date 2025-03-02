@@ -26,10 +26,7 @@ export const HomePage = () => {
     dispatch(loadProjects());
   }, [dispatch]);
 
-  const handleNewMovie = async () => {
-    const { payload: projectId } = await dispatch(addProject());
-    navigate(`/project/${projectId}`);
-  };
+  const handleNewMovie = async () => {};
 
   return (
     <Container maxWidth="sm">
@@ -40,7 +37,7 @@ export const HomePage = () => {
       <Grid container spacing={2}>
         <Grid size={6}>
           <Item className="flex flex-col">
-            <Button onClick={handleNewMovie} className="w-full flex-grow">
+            <Button component={Link} to="/new" className="w-full flex-grow">
               New Movie
             </Button>
           </Item>

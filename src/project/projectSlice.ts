@@ -7,7 +7,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
 import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
-import { getDB, FrameDTO, ProjectDTO } from "../store/db.ts";
+import { getDB, FrameDTO, ProjectDTO, SceneDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 
 const MAX_ONION_SKINS = 3;
@@ -81,15 +81,20 @@ export const loadProject = createAsyncThunk(
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
     const project = await db.get("projects", projectId);
-    if (project !== undefined) {
-      const frames = await db.getAllFromIndex("frames", "project", project.id);
-      dispatch(
-        projectSlice.actions.initProject({
-          project,
-          frames,
-        }),
-      );
+    if (project === undefined) {
+      return;
     }
+
+    const frames = await db.getAllFromIndex("frames", "project", project.id);
+    const scenes = await db.getAllFromIndex("scenes", "project", project.id);
+
+    dispatch(
+      projectSlice.actions.initProject({
+        project,
+        scenes,
+        frames,
+      }),
+    );
   },
 );
 
@@ -111,6 +116,25 @@ export const generatePreviewVideo = createAsyncThunk(
     const data = await blobToDataURL(video);
 
     dispatch(projectSlice.actions.updatePreviewVideo(data));
+  },
+);
+
+export const addSceneImage = createAsyncThunk(
+  "project/addSceneImage",
+  async (
+    { sceneId, image }: { sceneId: string; image: string },
+    { dispatch },
+  ) => {
+    const db = await getDB();
+    const scene = await db.get("scenes", sceneId);
+    if (scene == null) {
+      return;
+    }
+
+    scene.image = image;
+    dispatch(projectSlice.actions.updateScene(scene));
+
+    db.put("scenes", scene);
   },
 );
 
@@ -158,15 +182,21 @@ export const projectSlice = createSlice({
       numOnionSkins: 1,
     } as ProjectDTO,
     frames: [] as FrameDTO[],
+    scenes: [] as SceneDTO[],
     selectedFrameIds: [] as string[],
     previewVideo: undefined as undefined | string,
   },
   reducers: {
     initProject: (
       state,
-      action: PayloadAction<{ project: ProjectDTO; frames: FrameDTO[] }>,
+      action: PayloadAction<{
+        project: ProjectDTO;
+        scenes: SceneDTO[];
+        frames: FrameDTO[];
+      }>,
     ) => {
       state.frames = action.payload.frames;
+      state.scenes = action.payload.scenes;
       state.project = action.payload.project;
     },
     updateFrame: (state, action: PayloadAction<FrameDTO>) => {
@@ -201,12 +231,17 @@ export const projectSlice = createSlice({
     updatePreviewVideo: (state, action: PayloadAction<string>) => {
       state.previewVideo = action.payload;
     },
+    updateScene: (state, action: PayloadAction<SceneDTO>) => {
+      const scene = action.payload;
+      state.scenes = state.scenes.map((s) => (s.id === scene.id ? scene : s));
+    },
   },
 });
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectProject = (state: RootState) => state.projects.project;
 export const selectFrames = (state: RootState) => state.projects.frames;
+export const selectScenes = (state: RootState) => state.projects.scenes;
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
 export const selectOnionSkinImages = createSelector(
