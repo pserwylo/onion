@@ -1,5 +1,4 @@
-import Webcam from "react-webcam";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
   addFrame,
@@ -11,27 +10,12 @@ import {
   toggleOnionSkin,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
-import {
-  Badge,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  IconButton,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import {
-  CameraAlt,
-  Cameraswitch,
-  Layers,
-  LayersClear,
-  Speed,
-} from "@mui/icons-material";
+import { Badge, Container, IconButton, Tooltip } from "@mui/material";
+import { Layers, LayersClear, Speed } from "@mui/icons-material";
 import { useParams } from "react-router";
-import clsx from "clsx";
 import VideoPreviewLink from "./VideoPreviewLink.tsx";
 import FrameList from "./FrameList.tsx";
+import Camera from "../components/Camera.tsx";
 
 const ProjectEditor = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -39,13 +23,6 @@ const ProjectEditor = () => {
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const frames = useSelector(selectFrames);
   const project = useSelector(selectProject);
-  const [selfieCam, setSelfieCam] = useState(false);
-  const [webcamStatus, setWebcamStatus] = useState<
-    "initialising" | "connected" | "error"
-  >("initialising");
-
-  // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
-  const webcamRef = useRef<Webcam>(null);
 
   useEffect(() => {
     if (projectId) {
@@ -53,21 +30,14 @@ const ProjectEditor = () => {
     }
   }, [dispatch, projectId]);
 
-  const capture = useCallback(async () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      dispatch(addFrame(imageSrc));
-    }
-  }, [dispatch, webcamRef]);
-
-  const reverse = () => {
-    setSelfieCam(!selfieCam);
-  };
-
-  const videoConstraints = {
-    width: 640,
-    facingMode: selfieCam ? "user" : "environment",
-  };
+  const capture = useCallback(
+    async (image: string | null) => {
+      if (image) {
+        dispatch(addFrame(image));
+      }
+    },
+    [dispatch],
+  );
 
   if (project == null) {
     return null;
@@ -75,104 +45,33 @@ const ProjectEditor = () => {
 
   return (
     <Container maxWidth="sm">
-      {webcamStatus === "error" && (
-        <Box className="flex flex-col py-24 px-12 text-center">
-          <Typography className="!mt-8 block">Unable to use webcam</Typography>
-          <Button
-            variant="text"
-            size="small"
-            onClick={() => setSelfieCam(!selfieCam)}
-            startIcon={<Cameraswitch />}
-          >
-            Try different webcam
-          </Button>
-        </Box>
-      )}
-
-      {webcamStatus === "initialising" && (
-        <Box className="flex flex-col py-24 px-12 text-center">
-          <Box className="flex gap-4 justify-center items-center">
-            <CircularProgress />
-            <Typography>Initialising webcam</Typography>
-          </Box>
-          <Typography className="!mt-8 block">Taking too long?</Typography>
-          <Button
-            variant="text"
-            size="small"
-            onClick={() => setSelfieCam(!selfieCam)}
-            startIcon={<Cameraswitch />}
-          >
-            Try different webcam
-          </Button>
-        </Box>
-      )}
-
-      <div className="camera-wrapper">
-        <Webcam
-          ref={webcamRef}
-          audio={false}
-          screenshotFormat="image/webp"
-          onUserMediaError={() => setWebcamStatus("error")}
-          onUserMedia={() => setWebcamStatus("connected")}
-          width={640}
-          disablePictureInPicture
-          className={clsx("camera camera--feed", {
-            hidden: webcamStatus !== "connected",
-          })}
-          videoConstraints={videoConstraints}
-        />
-
-        {webcamStatus === "connected" && (
+      <Camera
+        onCapture={capture}
+        overlay={onionSkinImages.map((image) => (
+          <img
+            alt="overlay of previous frame"
+            className="onion-skin"
+            src={image.image}
+            key={image.id}
+          />
+        ))}
+        actions={
           <>
-            {onionSkinImages.map((image) => (
-              <img className="onion-skin" src={image.image} key={image.id} />
-            ))}
-
-            <Box
-              sx={{
-                padding: "0.1em 0.2em",
-                fontSize: "1.5em",
-                position: "absolute",
-                display: "flex",
-                top: "1em",
-                right: "1em",
-              }}
-            >
-              <Tooltip title="Frame rate (fps)">
-                <IconButton onClick={() => dispatch(toggleFrameRate())}>
-                  <Badge badgeContent={project.frameRate}>
-                    <Speed />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Onion skin">
-                <IconButton onClick={() => dispatch(toggleOnionSkin())}>
-                  <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Switch camera">
-                <IconButton onClick={reverse}>
-                  <Cameraswitch />
-                </IconButton>
-              </Tooltip>
-            </Box>
+            <Tooltip title="Frame rate (fps)">
+              <IconButton onClick={() => dispatch(toggleFrameRate())}>
+                <Badge badgeContent={project.frameRate}>
+                  <Speed />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Onion skin">
+              <IconButton onClick={() => dispatch(toggleOnionSkin())}>
+                <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
+              </IconButton>
+            </Tooltip>
           </>
-        )}
-      </div>
-
-      {webcamStatus === "connected" && (
-        <div className="mt-2 mb-4">
-          <Button
-            onClick={capture}
-            startIcon={<CameraAlt />}
-            variant="contained"
-            className="w-full py-4"
-            size="large"
-          >
-            Take Picture
-          </Button>
-        </div>
-      )}
+        }
+      />
 
       {frames.length > 0 && (
         <>
