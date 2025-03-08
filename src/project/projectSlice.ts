@@ -69,15 +69,15 @@ export const toggleFrameRate = createAsyncThunk(
   },
 );
 
+type ILoadProjectArgs = {
+  projectId: string;
+  sceneId?: string;
+  frameId?: string;
+};
+
 export const loadProject = createAsyncThunk(
   "project/loadProject",
-  async (projectId: string, { dispatch, getState }) => {
-    const existingProject = selectProject(getState() as RootState);
-    if (existingProject?.id === projectId) {
-      console.debug(`No need to load project ${projectId}, already loaded.`);
-      return;
-    }
-
+  async ({ projectId, sceneId, frameId }: ILoadProjectArgs, { dispatch }) => {
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
     const project = await db.get("projects", projectId);
@@ -93,6 +93,8 @@ export const loadProject = createAsyncThunk(
         project,
         scenes,
         frames,
+        sceneId,
+        frameId,
       }),
     );
   },
@@ -183,6 +185,8 @@ export const projectSlice = createSlice({
     } as ProjectDTO,
     frames: [] as FrameDTO[],
     scenes: [] as SceneDTO[],
+    frameId: undefined as string | undefined,
+    sceneId: undefined as string | undefined,
     selectedFrameIds: [] as string[],
     previewVideo: undefined as undefined | string,
   },
@@ -193,11 +197,15 @@ export const projectSlice = createSlice({
         project: ProjectDTO;
         scenes: SceneDTO[];
         frames: FrameDTO[];
+        frameId?: string;
+        sceneId?: string;
       }>,
     ) => {
       state.frames = action.payload.frames;
       state.scenes = action.payload.scenes;
       state.project = action.payload.project;
+      state.frameId = action.payload.frameId;
+      state.sceneId = action.payload.sceneId;
     },
     updateFrame: (state, action: PayloadAction<FrameDTO>) => {
       const frame = action.payload;
@@ -242,6 +250,14 @@ export const projectSlice = createSlice({
 export const selectProject = (state: RootState) => state.projects.project;
 export const selectFrames = (state: RootState) => state.projects.frames;
 export const selectScenes = (state: RootState) => state.projects.scenes;
+const selectSceneId = (state: RootState) => state.projects.sceneId;
+export const selectScene = createSelector(
+  [selectSceneId, selectScenes],
+  (sceneId, scenes) => {
+    console.log(`Looking for scene: ${sceneId} in `, scenes);
+    return scenes.find((s) => s.id === sceneId);
+  },
+);
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
 export const selectOnionSkinImages = createSelector(

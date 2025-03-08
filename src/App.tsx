@@ -17,7 +17,6 @@ import FrameEditor from "./project/FrameEditor.tsx";
 import { HomePage } from "./home/HomePage.tsx";
 import { NewProjectPage } from "./new-project/NewProjectPage.tsx";
 import { StoryboardEditorPage } from "./storyboard-editor/StoryboardEditorPage.tsx";
-import SceneEditor from "./project/SceneEditor.tsx";
 import ScenePhotoEditor from "./project/ScenePhotoEditor.tsx";
 
 function App() {
@@ -38,7 +37,7 @@ function App() {
                 <Route path="/new" element={<NewProjectPage />} />
                 <Route
                   path="/project/:projectId/scene/:sceneId"
-                  element={<SceneEditor />}
+                  element={<ProjectEditor />}
                 />
                 <Route
                   path="/project/:projectId/scene/:sceneId/photo"

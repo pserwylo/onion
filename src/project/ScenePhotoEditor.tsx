@@ -18,9 +18,9 @@ const ScenePhotoEditor = () => {
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject(projectId));
+      dispatch(loadProject({ projectId, sceneId }));
     }
-  }, [dispatch, projectId]);
+  }, [dispatch, projectId, sceneId]);
 
   const capture = useCallback(
     async (image: string | null) => {
@@ -66,7 +66,7 @@ const ScenePhotoEditor = () => {
         component={Link}
         variant="outlined"
         size="large"
-        to={`/project/${projectId}`}
+        to={`/project/${projectId}/storyboard`}
       >
         Back
       </Button>
