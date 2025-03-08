@@ -1,30 +1,37 @@
 import {
+  Box,
   Button,
   Container,
   Grid2 as Grid,
+  IconButton,
   styled,
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "../store/hooks.ts";
 import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { loadProject, selectScenes } from "../project/projectSlice.ts";
 import { SceneDTO } from "../store/db.ts";
-import { CameraAlt } from "@mui/icons-material";
+import { CameraAlt, Help } from "@mui/icons-material";
 
 export const StoryboardEditorPage = () => {
   const dispatch = useAppDispatch();
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const scenes = useSelector(selectScenes);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     if (projectId) {
       dispatch(loadProject({ projectId }));
     }
   }, [dispatch, projectId]);
+
+  const hasScene = useMemo(() => {
+    return scenes.some((s) => s.image !== undefined);
+  }, [scenes]);
 
   if (!projectId) {
     navigate("/");
@@ -34,15 +41,22 @@ export const StoryboardEditorPage = () => {
   return (
     <Container maxWidth="sm">
       <Typography variant="h1">Animation Time</Typography>
-      <Typography variant="h2" className="flex-grow">
-        Storyboard
-      </Typography>
-      <Typography>
-        A storyboard is a way of planning animated films, movies, or television
-        shows. A storyboard shows examples of what the artist wants to make
-        before they are animated. It also lets artists organize their stories
-        before they start to make the animation.
-      </Typography>
+      <Box className="flex gap-4">
+        <Typography variant="h2" className="flex-grow">
+          Storyboard
+        </Typography>
+        <IconButton onClick={() => setShowHelp(!showHelp)}>
+          <Help />
+        </IconButton>
+      </Box>
+      {(!hasScene || showHelp) && (
+        <Typography>
+          A storyboard is a way of planning animated films, movies, or
+          television shows. A storyboard shows examples of what the artist wants
+          to make before they are animated. It also lets artists organize their
+          stories before they start to make the animation.
+        </Typography>
+      )}
       <Grid container spacing={1}>
         {scenes.map((s) => (
           <Grid size={6} key={s.id}>
