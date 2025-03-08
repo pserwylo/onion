@@ -16,9 +16,9 @@ export type FrameDTO = {
 
 export type SceneDTO = {
   id: string;
-  image: string;
   project: string;
-  duration?: number;
+  image?: string;
+  description?: string;
 };
 
 interface OnionDB extends DBSchema {
