@@ -6,29 +6,49 @@ import {
   selectFrames,
   selectOnionSkinImages,
   selectProject,
+  selectScene,
   toggleFrameRate,
   toggleOnionSkin,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
-import { Badge, Container, IconButton, Tooltip } from "@mui/material";
-import { Layers, LayersClear, Speed } from "@mui/icons-material";
-import { useParams } from "react-router";
+import {
+  Badge,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import {
+  CameraAlt,
+  GridView,
+  Layers,
+  LayersClear,
+  Speed,
+} from "@mui/icons-material";
+import { Link, useNavigate, useParams } from "react-router";
 import VideoPreviewLink from "./VideoPreviewLink.tsx";
 import FrameList from "./FrameList.tsx";
 import Camera from "../components/Camera.tsx";
 
 const ProjectEditor = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, sceneId } = useParams<{
+    projectId: string;
+    sceneId: string;
+  }>();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const frames = useSelector(selectFrames);
+  const scene = useSelector(selectScene);
   const project = useSelector(selectProject);
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject(projectId));
+      dispatch(loadProject({ projectId, sceneId }));
     }
-  }, [dispatch, projectId]);
+  }, [dispatch, projectId, sceneId]);
 
   const capture = useCallback(
     async (image: string | null) => {
@@ -39,12 +59,43 @@ const ProjectEditor = () => {
     [dispatch],
   );
 
-  if (project == null) {
+  if (project == null || (sceneId !== undefined && scene === undefined)) {
     return null;
+  }
+
+  if (scene && scene.image === undefined) {
+    navigate(`/project/${projectId}/scene/${sceneId}/photo`);
   }
 
   return (
     <Container maxWidth="sm">
+      {scene && (
+        <Box className="flex gap-4 mb-4">
+          <img alt="scene image" src={scene.image} className="h-24" />
+          <Box className="flex flex-col gap-4">
+            <Typography variant="h3">Scene</Typography>
+            <Box className="flex gap-4">
+              <Button
+                startIcon={<GridView />}
+                variant="outlined"
+                component={Link}
+                to={`/project/${projectId}/storyboard`}
+              >
+                Back to Storyboard
+              </Button>
+              <Button
+                startIcon={<CameraAlt />}
+                variant="outlined"
+                component={Link}
+                to={`/project/${projectId}/scene/${sceneId}/photo`}
+              >
+                Edit
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
       <Camera
         onCapture={capture}
         overlay={onionSkinImages.map((image) => (
