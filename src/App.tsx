@@ -10,7 +10,6 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import React from "react";
 import theme from "./theme.ts";
 import VideoPreview from "./project/VideoPreview.tsx";
 import FrameEditor from "./project/FrameEditor.tsx";
@@ -22,40 +21,38 @@ import ScenePhotoEditor from "./project/ScenePhotoEditor.tsx";
 function App() {
   return (
     <>
-      <React.StrictMode>
-        <Provider store={store}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <HashRouter>
-              <Routes>
-                <Route index element={<HomePage />} />
-                <Route path="/project/:projectId" element={<ProjectEditor />} />
-                <Route
-                  path="/project/:projectId/storyboard"
-                  element={<StoryboardEditorPage />}
-                />
-                <Route path="/new" element={<NewProjectPage />} />
-                <Route
-                  path="/project/:projectId/scene/:sceneId"
-                  element={<ProjectEditor />}
-                />
-                <Route
-                  path="/project/:projectId/scene/:sceneId/photo"
-                  element={<ScenePhotoEditor />}
-                />
-                <Route
-                  path="/project/:projectId/frame/:frameId"
-                  element={<FrameEditor />}
-                />
-                <Route
-                  path="/project/:projectId/preview"
-                  element={<VideoPreview />}
-                />
-              </Routes>
-            </HashRouter>
-          </ThemeProvider>
-        </Provider>
-      </React.StrictMode>
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <HashRouter>
+            <Routes>
+              <Route index element={<HomePage />} />
+              <Route path="/project/:projectId" element={<ProjectEditor />} />
+              <Route
+                path="/project/:projectId/storyboard"
+                element={<StoryboardEditorPage />}
+              />
+              <Route path="/new" element={<NewProjectPage />} />
+              <Route
+                path="/project/:projectId/scene/:sceneId"
+                element={<ProjectEditor />}
+              />
+              <Route
+                path="/project/:projectId/scene/:sceneId/photo"
+                element={<ScenePhotoEditor />}
+              />
+              <Route
+                path="/project/:projectId/frame/:frameId"
+                element={<FrameEditor />}
+              />
+              <Route
+                path="/project/:projectId/preview"
+                element={<VideoPreview />}
+              />
+            </Routes>
+          </HashRouter>
+        </ThemeProvider>
+      </Provider>
     </>
   );
 }

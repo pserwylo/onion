@@ -7,26 +7,22 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
-  addProject,
   loadProjects,
   ProjectSummaryDTO,
   selectProjects,
 } from "./homeSlice.ts";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import clsx from "clsx";
 
 export const HomePage = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const projects = useSelector(selectProjects);
 
   useEffect(() => {
     dispatch(loadProjects());
   }, [dispatch]);
-
-  const handleNewMovie = async () => {};
 
   return (
     <Container maxWidth="sm">

@@ -1,5 +1,5 @@
-import { Link, useParams } from "react-router";
-import { loadProject, selectFrames, setFrameDuration } from "./projectSlice.ts";
+import { Link, useNavigate, useParams } from "react-router";
+import { loadProject, selectFrame, setFrameDuration } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
 import {
@@ -17,29 +17,32 @@ import { useEffect } from "react";
 
 const FrameEditor = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { projectId, frameId } = useParams<{
     projectId: string;
     frameId: string;
   }>();
-  const allFrames = useSelector(selectFrames);
+  const frame = useSelector(selectFrame);
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject(projectId));
+      dispatch(loadProject({ projectId, frameId }));
     }
-  }, [dispatch, projectId]);
+  }, [dispatch, projectId, frameId]);
 
-  if (frameId == null) {
-    console.warn("No frame ID provided to FrameEditor URL.");
+  if (projectId == null) {
+    console.warn("No project ID provided to FrameEditor URL.");
+    navigate(`/`);
     return null;
   }
 
-  const frame = allFrames.find((f) => f.id === frameId);
+  if (frameId == null) {
+    console.warn("No frame ID provided to FrameEditor URL.");
+    navigate(`/project/${projectId}`);
+    return null;
+  }
 
-  if (frame === undefined) {
-    console.warn(`Couldn't find frameId ${frameId} in frames: `, {
-      images: allFrames,
-    });
+  if (frame == null) {
     return null;
   }
 

@@ -22,7 +22,7 @@ export const StoryboardEditorPage = () => {
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject(projectId));
+      dispatch(loadProject({ projectId }));
     }
   }, [dispatch, projectId]);
 
@@ -56,11 +56,6 @@ export const StoryboardEditorPage = () => {
   );
 };
 
-type ISceneTileProps = {
-  projectId: string;
-  scene?: SceneDTO;
-};
-
 const SceneButton = styled(Button)({
   border: "solid 3px #41403E",
   borderTopLeftRadius: "255px 8px",
@@ -70,7 +65,12 @@ const SceneButton = styled(Button)({
   "&:hover": {
     boxShadow: "2px 8px 4px -6px hsla(0,0%,0%,.3)",
   },
-});
+}) as typeof Button; // https://github.com/mui/material-ui/issues/22728
+
+type ISceneTileProps = {
+  projectId: string;
+  scene: SceneDTO;
+};
 
 const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
   return (

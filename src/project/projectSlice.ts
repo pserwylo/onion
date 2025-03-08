@@ -250,16 +250,27 @@ export const projectSlice = createSlice({
 export const selectProject = (state: RootState) => state.projects.project;
 export const selectFrames = (state: RootState) => state.projects.frames;
 export const selectScenes = (state: RootState) => state.projects.scenes;
+
 const selectSceneId = (state: RootState) => state.projects.sceneId;
+const selectFrameId = (state: RootState) => state.projects.frameId;
+
 export const selectScene = createSelector(
   [selectSceneId, selectScenes],
   (sceneId, scenes) => {
-    console.log(`Looking for scene: ${sceneId} in `, scenes);
     return scenes.find((s) => s.id === sceneId);
   },
 );
+
+export const selectFrame = createSelector(
+  [selectFrameId, selectFrames],
+  (frameId, frames) => {
+    return frames.find((s) => s.id === frameId);
+  },
+);
+
 export const selectPreviewVideo = (state: RootState) =>
   state.projects.previewVideo;
+
 export const selectOnionSkinImages = createSelector(
   [selectFrames, selectProject],
   (frames, { numOnionSkins }) =>

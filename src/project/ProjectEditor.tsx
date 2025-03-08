@@ -7,6 +7,7 @@ import {
   selectOnionSkinImages,
   selectProject,
   selectScene,
+  selectScenes,
   toggleFrameRate,
   toggleOnionSkin,
 } from "./projectSlice.ts";
@@ -42,6 +43,7 @@ const ProjectEditor = () => {
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const frames = useSelector(selectFrames);
   const scene = useSelector(selectScene);
+  const scenes = useSelector(selectScenes);
   const project = useSelector(selectProject);
 
   useEffect(() => {
@@ -64,7 +66,17 @@ const ProjectEditor = () => {
   }
 
   if (scene && scene.image === undefined) {
-    navigate(`/project/${projectId}/scene/${sceneId}/photo`);
+    navigate(`/project/${projectId}/scene/${sceneId}/photo`, {
+      replace: true,
+    });
+    return null;
+  }
+
+  if (scenes.length > 0 && sceneId === undefined) {
+    navigate(`/project/${projectId}/storyboard`, {
+      replace: true,
+    });
+    return null;
   }
 
   return (
