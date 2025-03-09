@@ -50,7 +50,7 @@ export const StoryboardEditorPage = () => {
         </IconButton>
       </Box>
       {(!hasScene || showHelp) && (
-        <Typography>
+        <Typography className="pb-8 pt-4">
           A storyboard is a way of planning animated films, movies, or
           television shows. A storyboard shows examples of what the artist wants
           to make before they are animated. It also lets artists organize their
