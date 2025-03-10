@@ -45,19 +45,24 @@ export const StoryboardEditorPage = () => {
         <Typography variant="h2" className="flex-grow">
           Storyboard
         </Typography>
-        <IconButton onClick={() => setShowHelp(!showHelp)}>
-          <Help />
-        </IconButton>
+        {hasScene && (
+          <IconButton onClick={() => setShowHelp(!showHelp)}>
+            <Help />
+          </IconButton>
+        )}
       </Box>
       {(!hasScene || showHelp) && (
-        <Typography className="pb-8 pt-4">
+        <Typography className="pt-4">
           A storyboard is a way of planning animated films, movies, or
           television shows. A storyboard shows examples of what the artist wants
           to make before they are animated. It also lets artists organize their
           stories before they start to make the animation.
+          <a href="https://simple.wikipedia.org/wiki/Storyboard">
+            <sup>[1]</sup>
+          </a>
         </Typography>
       )}
-      <Grid container spacing={1}>
+      <Grid container spacing={1} className="mt-8">
         {scenes.map((s) => (
           <Grid size={6} key={s.id}>
             <Item className="flex flex-col">
