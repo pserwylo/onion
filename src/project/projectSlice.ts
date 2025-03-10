@@ -148,6 +148,7 @@ export const addFrame = createAsyncThunk(
       id: uuid(),
       image,
       project,
+      scene: (getState() as RootState).projects.sceneId,
     };
     dispatch(projectSlice.actions.addFrame(frame));
 
@@ -278,8 +279,30 @@ export const selectOnionSkinImages = createSelector(
       .slice(frames.length - Math.min(numOnionSkins, frames.length))
       .reverse(),
 );
+
 export const selectSelectedFrameIds = (state: RootState) =>
   state.projects.selectedFrameIds;
+
+export const makeSelectSceneSummary =
+  (id: string | undefined) => (state: RootState) => {
+    if (id === undefined) {
+      return undefined;
+    }
+
+    const project = selectProject(state);
+    const scene = selectScenes(state).find((s) => s.id === id);
+    const frames = selectFrames(state).filter((f) => f.scene === id);
+    const duration = frames.reduce(
+      (acc, f) => acc + (f.duration ? f.duration : 1 / project.frameRate),
+      0,
+    );
+
+    return {
+      scene,
+      frames,
+      duration,
+    };
+  };
 
 export const { setFrameSelected } = projectSlice.actions;
 export default projectSlice.reducer;

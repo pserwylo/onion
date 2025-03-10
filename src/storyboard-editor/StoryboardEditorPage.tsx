@@ -12,9 +12,14 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
 import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
-import { loadProject, selectScenes } from "../project/projectSlice.ts";
+import {
+  loadProject,
+  makeSelectSceneSummary,
+  selectScenes,
+} from "../project/projectSlice.ts";
 import { SceneDTO } from "../store/db.ts";
-import { CameraAlt, Help } from "@mui/icons-material";
+import { AccessTime, BurstMode, CameraAlt, Help } from "@mui/icons-material";
+import { OverlayText } from "../project/FrameList.tsx";
 
 export const StoryboardEditorPage = () => {
   const dispatch = useAppDispatch();
@@ -92,10 +97,29 @@ type ISceneTileProps = {
 };
 
 const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
+  const sceneDetails = useSelector(makeSelectSceneSummary(scene.id));
+
+  if (sceneDetails === undefined) {
+    return null;
+  }
+
+  const renderSceneDetails = () => {
+    return (
+      <Box className="absolute bottom-2 right-2 flex gap-4 bg-black px-2 py-1 bg-opacity-20">
+        <OverlayText>
+          <BurstMode /> {sceneDetails.frames.length}
+        </OverlayText>
+        <OverlayText className="lowercase">
+          <AccessTime /> {sceneDetails.duration}s
+        </OverlayText>
+      </Box>
+    );
+  };
+
   return (
     <SceneButton
       component={Link}
-      className="border-1 m-3 p-3 flex-grow"
+      className="border-1 m-3 p-3 flex-grow relative"
       variant="outlined"
       to={`/project/${projectId}/scene/${scene.id}`}
       style={{
@@ -104,7 +128,7 @@ const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
         backgroundPosition: "center",
       }}
     >
-      {scene.image ? null : <CameraAlt />}
+      {scene.image ? renderSceneDetails() : <CameraAlt />}
     </SceneButton>
   );
 };

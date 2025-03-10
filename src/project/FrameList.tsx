@@ -2,7 +2,6 @@ import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
   removeSelectedFrames,
-  selectFrames,
   selectSelectedFrameIds,
   setFrameSelected,
 } from "./projectSlice.ts";
@@ -14,11 +13,11 @@ import { FrameDTO, ProjectDTO } from "../store/db.ts";
 
 type IFrameListProps = {
   project: ProjectDTO;
+  frames: FrameDTO[];
   className?: string;
 };
 
-const FrameList = ({ project, className }: IFrameListProps) => {
-  const frames = useSelector(selectFrames);
+const FrameList = ({ project, frames, className }: IFrameListProps) => {
   const dispatch = useAppDispatch();
   const selectedFrameIds = useSelector(selectSelectedFrameIds);
   const navigate = useNavigate();
@@ -165,7 +164,7 @@ type IOverlayText = {
   className?: string;
 };
 
-const OverlayText = ({ children, className }: IOverlayText) => (
+export const OverlayText = ({ children, className }: IOverlayText) => (
   <Box
     className={clsx("text-white", className)}
     sx={{

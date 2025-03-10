@@ -3,6 +3,7 @@ import { useAppDispatch } from "../store/hooks.ts";
 import {
   addFrame,
   loadProject,
+  makeSelectSceneSummary,
   selectFrames,
   selectOnionSkinImages,
   selectProject,
@@ -41,7 +42,8 @@ const ProjectEditor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const onionSkinImages = useSelector(selectOnionSkinImages);
-  const frames = useSelector(selectFrames);
+  const allFrames = useSelector(selectFrames);
+  const sceneDetails = useSelector(makeSelectSceneSummary(sceneId));
   const scene = useSelector(selectScene);
   const scenes = useSelector(selectScenes);
   const project = useSelector(selectProject);
@@ -78,6 +80,14 @@ const ProjectEditor = () => {
     });
     return null;
   }
+
+  const frames = sceneDetails ? sceneDetails.frames : allFrames;
+
+  console.log({
+    allFrames,
+    sceneDetails,
+    frames,
+  });
 
   return (
     <Container maxWidth="sm">
@@ -138,7 +148,11 @@ const ProjectEditor = () => {
 
       {frames.length > 0 && (
         <>
-          <FrameList project={project} className="w-full mb-2" />
+          <FrameList
+            project={project}
+            frames={frames}
+            className="w-full mb-2"
+          />
           <VideoPreviewLink
             projectId={project.id}
             imageData={frames[0].image}
