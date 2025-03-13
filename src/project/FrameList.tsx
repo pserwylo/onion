@@ -50,7 +50,7 @@ const FrameList = ({ project, frames, className }: IFrameListProps) => {
                   (frame.duration ? frame.duration : 1 / project.frameRate))
               }
               key={i}
-              index={frames.length - i}
+              index={i}
               selected={selectedFrameIds.includes(frame.id)}
             />
           </li>
@@ -140,7 +140,9 @@ const Frame = ({ frame, index, time, selected }: IFrameProps) => {
           <Pause />
         </OverlayText>
       )}
-      <OverlayText className="absolute bottom-1 left-2">{index}</OverlayText>
+      <OverlayText className="absolute bottom-1 left-2">
+        {index + 1}
+      </OverlayText>
       <OverlayText className="absolute bottom-1 right-2">
         {time.toFixed(1)}s
       </OverlayText>

@@ -18,7 +18,13 @@ import {
   selectScenes,
 } from "../project/projectSlice.ts";
 import { SceneDTO } from "../store/db.ts";
-import { AccessTime, BurstMode, CameraAlt, Help } from "@mui/icons-material";
+import {
+  AccessTime,
+  BurstMode,
+  CameraAlt,
+  Close,
+  Help,
+} from "@mui/icons-material";
 import { OverlayText } from "../project/FrameList.tsx";
 
 export const StoryboardEditorPage = () => {
@@ -45,8 +51,7 @@ export const StoryboardEditorPage = () => {
 
   return (
     <Container maxWidth="sm">
-      <Typography variant="h1">Animation Time</Typography>
-      <Box className="flex gap-4">
+      <Box className="flex gap-4 mt-4">
         <Typography variant="h2" className="flex-grow">
           Storyboard
         </Typography>
@@ -55,6 +60,9 @@ export const StoryboardEditorPage = () => {
             <Help />
           </IconButton>
         )}
+        <IconButton component={Link} to="/">
+          <Close />
+        </IconButton>
       </Box>
       {(!hasScene || showHelp) && (
         <Typography className="pt-4">
@@ -105,7 +113,7 @@ const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
 
   const renderSceneDetails = () => {
     return (
-      <Box className="absolute bottom-2 right-2 flex gap-4 bg-black px-2 py-1 bg-opacity-20">
+      <Box className="absolute bottom-2 right-2 flex gap-4 bg-black/20 px-2 py-1 rounded">
         <OverlayText>
           <BurstMode /> {sceneDetails.frames.length}
         </OverlayText>

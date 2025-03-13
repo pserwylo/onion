@@ -29,7 +29,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
   const capture = useCallback(async () => {
     const image = webcamRef.current?.getScreenshot();
     onCapture(image ?? null);
-  }, [webcamRef]);
+  }, [onCapture, webcamRef]);
 
   const reverse = () => {
     setSelfieCam(!selfieCam);

@@ -24,13 +24,15 @@ import {
 } from "@mui/material";
 import {
   CameraAlt,
-  GridView,
+  ChevronLeft,
+  ChevronRight,
+  Close,
   Layers,
   LayersClear,
+  PlayCircle,
   Speed,
 } from "@mui/icons-material";
 import { Link, useNavigate, useParams } from "react-router";
-import VideoPreviewLink from "./VideoPreviewLink.tsx";
 import FrameList from "./FrameList.tsx";
 import Camera from "../components/Camera.tsx";
 
@@ -83,39 +85,80 @@ const ProjectEditor = () => {
 
   const frames = sceneDetails ? sceneDetails.frames : allFrames;
 
-  console.log({
-    allFrames,
-    sceneDetails,
-    frames,
-  });
-
   return (
     <Container maxWidth="sm">
-      {scene && (
-        <Box className="flex gap-4 mb-4">
-          <img alt="scene image" src={scene.image} className="h-24" />
-          <Box className="flex flex-col gap-4">
-            <Typography variant="h3">Scene</Typography>
-            <Box className="flex gap-4">
-              <Button
-                startIcon={<GridView />}
-                variant="outlined"
-                component={Link}
-                to={`/project/${projectId}/storyboard`}
-              >
-                Back to Storyboard
-              </Button>
-              <Button
-                startIcon={<CameraAlt />}
-                variant="outlined"
-                component={Link}
-                to={`/project/${projectId}/scene/${sceneId}/photo`}
-              >
-                Edit
-              </Button>
-            </Box>
+      {scene ? (
+        <Box className="flex flex-col gap-4 my-4 w-full">
+          <Box className="flex gap-4 w-full">
+            <Button>
+              <ChevronLeft />
+            </Button>
+            <img alt="scene image" src={scene.image} className="h-24" />
+            <Typography variant="h3" className="flex-grow">
+              Scene
+            </Typography>
+            <IconButton
+              component={Link}
+              to={`/project/${projectId}/storyboard`}
+              className="self-start"
+            >
+              <Close />
+            </IconButton>
+            <Button>
+              <ChevronRight />
+            </Button>
+          </Box>
+          <Box className="flex gap-4">
+            <Button
+              startIcon={<PlayCircle />}
+              variant="outlined"
+              size="small"
+              component={Link}
+              to={`/project/${projectId}/preview`}
+            >
+              Watch
+            </Button>
+            <Button
+              startIcon={<CameraAlt />}
+              variant="outlined"
+              size="small"
+              component={Link}
+              to={`/project/${projectId}/scene/${sceneId}/photo`}
+            >
+              Edit
+            </Button>
           </Box>
         </Box>
+      ) : (
+        <Box className="flex flex-col gap-4 mb-4 mt-4 w-full items-start">
+          <Box className="flex w-full">
+            <Typography variant="h3" className="flex-grow">
+              Movie
+            </Typography>
+            <IconButton component={Link} to="/">
+              <Close />
+            </IconButton>
+          </Box>
+          <Button
+            startIcon={<PlayCircle />}
+            variant="outlined"
+            size="small"
+            component={Link}
+            to={`/project/${projectId}/preview`}
+          >
+            Watch
+          </Button>
+        </Box>
+      )}
+
+      {frames.length > 0 && (
+        <>
+          <FrameList
+            project={project}
+            frames={frames}
+            className="w-full mb-2"
+          />
+        </>
       )}
 
       <Camera
@@ -145,20 +188,6 @@ const ProjectEditor = () => {
           </>
         }
       />
-
-      {frames.length > 0 && (
-        <>
-          <FrameList
-            project={project}
-            frames={frames}
-            className="w-full mb-2"
-          />
-          <VideoPreviewLink
-            projectId={project.id}
-            imageData={frames[0].image}
-          />
-        </>
-      )}
     </Container>
   );
 };

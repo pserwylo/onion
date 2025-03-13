@@ -292,10 +292,12 @@ export const makeSelectSceneSummary =
     const project = selectProject(state);
     const scene = selectScenes(state).find((s) => s.id === id);
     const frames = selectFrames(state).filter((f) => f.scene === id);
-    const duration = frames.reduce(
-      (acc, f) => acc + (f.duration ? f.duration : 1 / project.frameRate),
-      0,
-    );
+    const duration = frames
+      .reduce(
+        (acc, f) => acc + (f.duration ? f.duration : 1 / project.frameRate),
+        0,
+      )
+      .toFixed(1);
 
     return {
       scene,
