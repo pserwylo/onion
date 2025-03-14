@@ -90,13 +90,16 @@ const ProjectEditor = () => {
       {scene ? (
         <Box className="flex flex-col gap-4 my-4 w-full">
           <Box className="flex gap-4 w-full">
-            <Button>
-              <ChevronLeft />
-            </Button>
             <img alt="scene image" src={scene.image} className="h-24" />
             <Typography variant="h3" className="flex-grow">
               Scene
             </Typography>
+            <IconButton component={Link} className="self-start" to="/">
+              <ChevronLeft />
+            </IconButton>
+            <IconButton component={Link} className="self-start" to="/">
+              <ChevronRight />
+            </IconButton>
             <IconButton
               component={Link}
               to={`/project/${projectId}/storyboard`}
@@ -104,9 +107,6 @@ const ProjectEditor = () => {
             >
               <Close />
             </IconButton>
-            <Button>
-              <ChevronRight />
-            </Button>
           </Box>
           <Box className="flex gap-4">
             <Button

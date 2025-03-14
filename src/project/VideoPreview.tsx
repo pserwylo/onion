@@ -4,15 +4,24 @@ import { useEffect } from "react";
 import { Box, Button, Container } from "@mui/material";
 import { ChevronLeft, CloudDownload } from "@mui/icons-material";
 import { useSelector } from "react-redux";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 
 const VideoPreview = () => {
   const previewVideo = useSelector(selectPreviewVideo);
   const dispatch = useAppDispatch();
+  const { projectId, sceneId } = useParams<{
+    projectId: string;
+    sceneId?: string;
+  }>();
 
   useEffect(() => {
     dispatch(generatePreviewVideo());
   }, [dispatch]);
+
+  let backLink = `/project/${projectId}`;
+  if (sceneId) {
+    backLink += `/scene/${sceneId}`;
+  }
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2">
@@ -20,7 +29,7 @@ const VideoPreview = () => {
       <Box className="flex gap-4">
         <Button
           component={Link}
-          to="/"
+          to={backLink}
           startIcon={<ChevronLeft />}
           size="large"
           sx={{ flexGrow: 1 }}

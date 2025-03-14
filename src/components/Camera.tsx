@@ -74,7 +74,14 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
         </Box>
       )}
 
-      <div className="camera-wrapper">
+      <a
+        href="#"
+        className="block relative max-w-full"
+        onClick={(e) => {
+          e.preventDefault();
+          capture();
+        }}
+      >
         <Webcam
           ref={webcamRef}
           audio={false}
@@ -97,7 +104,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
               </Box>
             )}
 
-            <Box className="absolute flex top-4 right-4 p-1 font-md">
+            <Box className="absolute flex top-4 right-4 px-1 font-md bg-white/20 color-white text-white">
               {actions}
               <Tooltip title="Switch camera">
                 <IconButton onClick={reverse}>
@@ -107,10 +114,10 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
             </Box>
           </>
         )}
-      </div>
+      </a>
 
       {webcamStatus === "connected" && (
-        <div className="mt-2 mb-4">
+        <div className="mb-4">
           <Button
             onClick={capture}
             startIcon={<CameraAlt />}
