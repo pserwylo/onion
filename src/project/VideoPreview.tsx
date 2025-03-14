@@ -9,18 +9,18 @@ import { Link, useParams } from "react-router";
 const VideoPreview = () => {
   const previewVideo = useSelector(selectPreviewVideo);
   const dispatch = useAppDispatch();
-  const { projectId, sceneId } = useParams<{
+  const { projectId, sceneIndex } = useParams<{
     projectId: string;
-    sceneId?: string;
+    sceneIndex?: string;
   }>();
 
   useEffect(() => {
-    dispatch(generatePreviewVideo());
-  }, [dispatch]);
+    dispatch(generatePreviewVideo({ projectId: projectId!, sceneIndex }));
+  }, [dispatch, projectId, sceneIndex]);
 
   let backLink = `/project/${projectId}`;
-  if (sceneId) {
-    backLink += `/scene/${sceneId}`;
+  if (sceneIndex) {
+    backLink += `/scene/${sceneIndex}`;
   }
 
   return (

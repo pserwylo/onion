@@ -71,13 +71,16 @@ export const toggleFrameRate = createAsyncThunk(
 
 type ILoadProjectArgs = {
   projectId: string;
-  sceneId?: string;
+  sceneIndex?: string;
   frameId?: string;
 };
 
 export const loadProject = createAsyncThunk(
   "project/loadProject",
-  async ({ projectId, sceneId, frameId }: ILoadProjectArgs, { dispatch }) => {
+  async (
+    { projectId, sceneIndex, frameId }: ILoadProjectArgs,
+    { dispatch },
+  ) => {
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
     const project = await db.get("projects", projectId);
@@ -93,42 +96,122 @@ export const loadProject = createAsyncThunk(
         project,
         scenes,
         frames,
-        sceneId,
+        sceneIndex,
         frameId,
       }),
     );
   },
 );
 
+type IGeneratePreviewVideoArgs = {
+  projectId: string;
+  sceneIndex?: string;
+};
+
+const generateVideoFromFrames = async (
+  frames: FrameDTO[],
+  frameRate: number,
+) => {
+  console.log("generateVideoFromFrames: About to generate video. ", {
+    frames,
+    frameRate,
+  });
+
+  const finalFrames = frames
+    .map((frame) =>
+      frame.duration
+        ? new Array<string>(frameRate * frame.duration).fill(frame.image)
+        : frame.image,
+    )
+    .flat();
+
+  console.log(
+    "Final frames for generation, after taking into account frame duration: ",
+    finalFrames,
+  );
+
+  const video = Whammy.fromImageArray(finalFrames, frameRate) as Blob;
+  console.log("Generated video blob: ", video);
+  const videoDataUrl = await blobToDataURL(video);
+  console.log("Genrerated data URL: ", videoDataUrl);
+  return videoDataUrl;
+};
+
 export const generatePreviewVideo = createAsyncThunk(
   "project/generatePreviewVideo",
-  async (_: void, { getState, dispatch }) => {
-    const { frameRate } = selectProject(getState() as RootState);
+  async (
+    { projectId, sceneIndex }: IGeneratePreviewVideoArgs,
+    { getState, dispatch },
+  ) => {
+    await dispatch(loadProject({ projectId, sceneIndex }));
     const frames = selectFrames(getState() as RootState);
-    const video = Whammy.fromImageArray(
-      frames
-        .map((frame) =>
-          frame.duration
-            ? new Array<string>(frameRate * frame.duration).fill(frame.image)
-            : frame.image,
-        )
-        .flat(),
-      frameRate,
-    ) as Blob;
-    const data = await blobToDataURL(video);
+    const scenes = selectScenes(getState() as RootState);
+    const { frameRate } = selectProject(getState() as RootState);
 
-    dispatch(projectSlice.actions.updatePreviewVideo(data));
+    let video: string;
+    if (scenes.length === 0) {
+      console.log(`Rendering simple movie`);
+      // Simple movie, no scenes
+      video = await generateVideoFromFrames(frames, frameRate);
+    } else if (sceneIndex !== undefined) {
+      console.log(`Rendering individual scene ${sceneIndex}`);
+      // Individual scene.
+      const scene = scenes[sceneIndex];
+      const sceneFrames = frames.filter((f) => f.scene === scene.id);
+      video = await generateVideoFromFrames(sceneFrames, frameRate);
+    } else {
+      console.log(`Rendering all scenes`);
+      // Full movie, including scenes (will render storyboards in place of scene with no frames).
+      const framesToRender: FrameDTO[] = [];
+      for (let i = 0; i < scenes.length; i++) {
+        const scene = scenes[i];
+
+        const sceneFrames = frames.filter((f) => f.scene === scene.id);
+
+        if (sceneFrames.length === 0) {
+          if (!scene.image) {
+            console.log(
+              `Scene ${i}: Skipping scene without an image or frames`,
+            );
+            continue;
+          }
+
+          console.log(
+            `Scene ${i}: Building frame from a blank storyboard scene.`,
+          );
+          framesToRender.push({
+            scene: scene.id,
+            image: scene.image,
+            project: scene.project,
+            duration: 2,
+            id: uuid(),
+          } as FrameDTO);
+        } else {
+          console.log(
+            `Scene ${i}: Adding ${sceneFrames.length} frames to the movie from scene. `,
+            sceneFrames,
+          );
+          framesToRender.push(...sceneFrames);
+        }
+      }
+
+      console.log(
+        `Building video from ${framesToRender.length} frames. `,
+        framesToRender,
+      );
+      video = await generateVideoFromFrames(framesToRender, frameRate);
+    }
+
+    console.log(`Updating preview video to: ${video}`);
+    dispatch(projectSlice.actions.updatePreviewVideo(video));
   },
 );
 
 export const addSceneImage = createAsyncThunk(
   "project/addSceneImage",
-  async (
-    { sceneId, image }: { sceneId: string; image: string },
-    { dispatch },
-  ) => {
+  async (image: string, { getState, dispatch }) => {
     const db = await getDB();
-    const scene = await db.get("scenes", sceneId);
+    const scene = selectScene(getState() as RootState);
     if (scene == null) {
       return;
     }
@@ -144,11 +227,12 @@ export const addFrame = createAsyncThunk(
   "project/addFrame",
   async (image: string, { dispatch, getState }) => {
     const { id: project } = selectProject(getState() as RootState);
+    const scene = selectScene(getState() as RootState);
     const frame: FrameDTO = {
       id: uuid(),
       image,
       project,
-      scene: (getState() as RootState).projects.sceneId,
+      scene: scene?.id,
     };
     dispatch(projectSlice.actions.addFrame(frame));
 
@@ -187,7 +271,7 @@ export const projectSlice = createSlice({
     frames: [] as FrameDTO[],
     scenes: [] as SceneDTO[],
     frameId: undefined as string | undefined,
-    sceneId: undefined as string | undefined,
+    sceneIndex: undefined as string | undefined,
     selectedFrameIds: [] as string[],
     previewVideo: undefined as undefined | string,
   },
@@ -199,14 +283,14 @@ export const projectSlice = createSlice({
         scenes: SceneDTO[];
         frames: FrameDTO[];
         frameId?: string;
-        sceneId?: string;
+        sceneIndex?: string;
       }>,
     ) => {
       state.frames = action.payload.frames;
       state.scenes = action.payload.scenes;
       state.project = action.payload.project;
       state.frameId = action.payload.frameId;
-      state.sceneId = action.payload.sceneId;
+      state.sceneIndex = action.payload.sceneIndex;
     },
     updateFrame: (state, action: PayloadAction<FrameDTO>) => {
       const frame = action.payload;
@@ -252,13 +336,18 @@ export const selectProject = (state: RootState) => state.projects.project;
 export const selectFrames = (state: RootState) => state.projects.frames;
 export const selectScenes = (state: RootState) => state.projects.scenes;
 
-const selectSceneId = (state: RootState) => state.projects.sceneId;
+const selectSceneIndex = (state: RootState) =>
+  state.projects.sceneIndex
+    ? parseInt(state.projects.sceneIndex, 10)
+    : undefined;
 const selectFrameId = (state: RootState) => state.projects.frameId;
 
 export const selectScene = createSelector(
-  [selectSceneId, selectScenes],
-  (sceneId, scenes) => {
-    return scenes.find((s) => s.id === sceneId);
+  [selectSceneIndex, selectScenes],
+  (sceneIndex, scenes) => {
+    return sceneIndex !== undefined && scenes.length > sceneIndex
+      ? scenes[sceneIndex]
+      : undefined;
   },
 );
 
@@ -284,14 +373,16 @@ export const selectSelectedFrameIds = (state: RootState) =>
   state.projects.selectedFrameIds;
 
 export const makeSelectSceneSummary =
-  (id: string | undefined) => (state: RootState) => {
-    if (id === undefined) {
+  (index: string | undefined) => (state: RootState) => {
+    if (index === undefined) {
       return undefined;
     }
 
+    const i = parseInt(index, 10);
+
     const project = selectProject(state);
-    const scene = selectScenes(state).find((s) => s.id === id);
-    const frames = selectFrames(state).filter((f) => f.scene === id);
+    const scene = selectScenes(state)[i];
+    const frames = selectFrames(state).filter((f) => f.scene === scene.id);
     const duration = frames
       .reduce(
         (acc, f) => acc + (f.duration ? f.duration : 1 / project.frameRate),

@@ -41,7 +41,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
   };
 
   return (
-    <>
+    <div>
       {webcamStatus === "error" && (
         <Box className="flex flex-col py-24 px-12 text-center">
           <Typography className="!mt-8 block">Unable to use webcam</Typography>
@@ -129,7 +129,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

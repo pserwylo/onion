@@ -34,11 +34,11 @@ function App() {
               />
               <Route path="/new" element={<NewProjectPage />} />
               <Route
-                path="/project/:projectId/scene/:sceneId"
+                path="/project/:projectId/scene/:sceneIndex"
                 element={<ProjectEditor />}
               />
               <Route
-                path="/project/:projectId/scene/:sceneId/photo"
+                path="/project/:projectId/scene/:sceneIndex/photo"
                 element={<ScenePhotoEditor />}
               />
               <Route
@@ -47,6 +47,10 @@ function App() {
               />
               <Route
                 path="/project/:projectId/preview"
+                element={<VideoPreview />}
+              />
+              <Route
+                path="/project/:projectId/scene/:sceneIndex/preview"
                 element={<VideoPreview />}
               />
             </Routes>

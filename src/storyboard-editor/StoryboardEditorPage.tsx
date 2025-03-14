@@ -14,8 +14,8 @@ import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import {
   loadProject,
-  makeSelectSceneSummary,
   selectScenes,
+  makeSelectSceneSummary,
 } from "../project/projectSlice.ts";
 import { SceneDTO } from "../store/db.ts";
 import {
@@ -24,6 +24,7 @@ import {
   CameraAlt,
   Close,
   Help,
+  PlayCircle,
 } from "@mui/icons-material";
 import { OverlayText } from "../project/FrameList.tsx";
 
@@ -75,11 +76,22 @@ export const StoryboardEditorPage = () => {
           </a>
         </Typography>
       )}
+      <Box className="pt-4">
+        <Button
+          startIcon={<PlayCircle />}
+          variant="outlined"
+          size="small"
+          component={Link}
+          to={`/project/${projectId}/preview`}
+        >
+          Watch
+        </Button>
+      </Box>
       <Grid container spacing={1} className="mt-8">
-        {scenes.map((s) => (
+        {scenes.map((s, i) => (
           <Grid size={6} key={s.id}>
             <Item className="flex flex-col">
-              <SceneTile projectId={projectId} scene={s} />
+              <SceneTile projectId={projectId} scene={s} index={i} />
             </Item>
           </Grid>
         ))}
@@ -102,10 +114,11 @@ const SceneButton = styled(Button)({
 type ISceneTileProps = {
   projectId: string;
   scene: SceneDTO;
+  index: number;
 };
 
-const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
-  const sceneDetails = useSelector(makeSelectSceneSummary(scene.id));
+const SceneTile = ({ projectId, scene, index }: ISceneTileProps) => {
+  const sceneDetails = useSelector(makeSelectSceneSummary(index.toString()));
 
   if (sceneDetails === undefined) {
     return null;
@@ -129,7 +142,7 @@ const SceneTile = ({ projectId, scene }: ISceneTileProps) => {
       component={Link}
       className="border-1 m-3 p-3 flex-grow relative"
       variant="outlined"
-      to={`/project/${projectId}/scene/${scene.id}`}
+      to={`/project/${projectId}/scene/${index}`}
       style={{
         backgroundImage: scene.image ? `url("${scene.image}")` : undefined,
         backgroundSize: "cover",

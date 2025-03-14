@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
+  Help,
   Layers,
   LayersClear,
   PlayCircle,
@@ -37,24 +38,24 @@ import FrameList from "./FrameList.tsx";
 import Camera from "../components/Camera.tsx";
 
 const ProjectEditor = () => {
-  const { projectId, sceneId } = useParams<{
+  const { projectId, sceneIndex } = useParams<{
     projectId: string;
-    sceneId: string;
+    sceneIndex: string;
   }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const onionSkinImages = useSelector(selectOnionSkinImages);
   const allFrames = useSelector(selectFrames);
-  const sceneDetails = useSelector(makeSelectSceneSummary(sceneId));
+  const sceneDetails = useSelector(makeSelectSceneSummary(sceneIndex));
   const scene = useSelector(selectScene);
   const scenes = useSelector(selectScenes);
   const project = useSelector(selectProject);
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject({ projectId, sceneId }));
+      dispatch(loadProject({ projectId, sceneIndex }));
     }
-  }, [dispatch, projectId, sceneId]);
+  }, [dispatch, projectId, sceneIndex]);
 
   const capture = useCallback(
     async (image: string | null) => {
@@ -65,18 +66,18 @@ const ProjectEditor = () => {
     [dispatch],
   );
 
-  if (project == null || (sceneId !== undefined && scene === undefined)) {
+  if (project == null || (sceneIndex !== undefined && scene === undefined)) {
     return null;
   }
 
   if (scene && scene.image === undefined) {
-    navigate(`/project/${projectId}/scene/${sceneId}/photo`, {
+    navigate(`/project/${projectId}/scene/${sceneIndex}/photo`, {
       replace: true,
     });
     return null;
   }
 
-  if (scenes.length > 0 && sceneId === undefined) {
+  if (scenes.length > 0 && sceneIndex === undefined) {
     navigate(`/project/${projectId}/storyboard`, {
       replace: true,
     });
@@ -85,20 +86,43 @@ const ProjectEditor = () => {
 
   const frames = sceneDetails ? sceneDetails.frames : allFrames;
 
+  const sceneIndexInt =
+    sceneIndex !== undefined ? parseInt(sceneIndex, 10) : undefined;
+
   return (
     <Container maxWidth="sm">
-      {scene ? (
+      {scene && sceneIndexInt !== undefined ? (
         <Box className="flex flex-col gap-4 my-4 w-full">
           <Box className="flex gap-4 w-full">
             <img alt="scene image" src={scene.image} className="h-24" />
             <Typography variant="h3" className="flex-grow">
               Scene
             </Typography>
-            <IconButton component={Link} className="self-start" to="/">
+            <IconButton
+              disabled={sceneIndex === "0"}
+              component={Link}
+              className="self-start"
+              to={
+                sceneIndexInt !== 0
+                  ? `/project/${projectId}/scene/${sceneIndexInt - 1}`
+                  : "/"
+              }
+            >
               <ChevronLeft />
             </IconButton>
-            <IconButton component={Link} className="self-start" to="/">
+            <IconButton
+              component={Link}
+              className="self-start"
+              to={
+                sceneIndexInt < scenes.length - 1
+                  ? `/project/${projectId}/scene/${sceneIndexInt + 1}`
+                  : "/"
+              }
+            >
               <ChevronRight />
+            </IconButton>
+            <IconButton component={Link} className="self-start" to="/">
+              <Help />
             </IconButton>
             <IconButton
               component={Link}
@@ -114,7 +138,7 @@ const ProjectEditor = () => {
               variant="outlined"
               size="small"
               component={Link}
-              to={`/project/${projectId}/preview`}
+              to={`/project/${projectId}/scene/${sceneIndex}/preview`}
             >
               Watch
             </Button>
@@ -123,7 +147,7 @@ const ProjectEditor = () => {
               variant="outlined"
               size="small"
               component={Link}
-              to={`/project/${projectId}/scene/${sceneId}/photo`}
+              to={`/project/${projectId}/scene/${sceneIndex}/photo`}
             >
               Edit
             </Button>

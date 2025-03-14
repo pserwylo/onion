@@ -1,75 +1,59 @@
 import { Link, useNavigate, useParams } from "react-router";
-import { addSceneImage, loadProject, selectScenes } from "./projectSlice.ts";
+import { addSceneImage, loadProject, selectScene } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
-import { useSelector } from "react-redux";
-import { Button, Container, Typography } from "@mui/material";
+import { Container, IconButton, Typography } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import Camera from "../components/Camera.tsx";
-import { ChevronLeft } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
+import { useSelector } from "react-redux";
 
 const ScenePhotoEditor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { projectId, sceneId } = useParams<{
+  const scene = useSelector(selectScene);
+  const { projectId, sceneIndex } = useParams<{
     projectId: string;
-    sceneId: string;
+    sceneIndex: string;
   }>();
-  const allScenes = useSelector(selectScenes);
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject({ projectId, sceneId }));
+      dispatch(loadProject({ projectId, sceneIndex }));
     }
-  }, [dispatch, projectId, sceneId]);
+  }, [dispatch, projectId, sceneIndex]);
 
   const capture = useCallback(
     async (image: string | null) => {
-      if (sceneId == null || image == null) {
+      if (sceneIndex == null || image == null) {
         return;
       }
 
-      await dispatch(addSceneImage({ sceneId, image }));
+      await dispatch(addSceneImage(image));
       navigate(`/project/${projectId}/storyboard`);
     },
-    [navigate, dispatch, sceneId, projectId],
+    [navigate, dispatch, sceneIndex, projectId],
   );
 
-  if (sceneId == null) {
-    console.warn("No scene ID provided to FrameEditor URL.");
+  if (scene == null) {
     return null;
   }
 
-  let sceneIndex = 0;
-  const scene = allScenes.find((f, i) => {
-    if (f.id === sceneId) {
-      sceneIndex = i;
-      return true;
-    }
+  const backLink = scene.image
+    ? `/project/${projectId}/scene/${sceneIndex}`
+    : `/project/${projectId}/storyboard`;
 
-    return false;
-  });
-
-  if (scene === undefined) {
-    console.warn(`Couldn't find sceneId ${sceneId} in scenes: `, {
-      scenes: allScenes,
-    });
-    return null;
-  }
-
+  // TODO: Taking photo of scene not working...
   return (
-    <Container maxWidth="sm" className="flex flex-col gap-y-2">
-      <Typography variant="h1">Animation Time</Typography>
-      <Typography variant="h2">Scene {sceneIndex + 1}</Typography>
+    <Container maxWidth="sm" className="flex flex-col gap-y-2 mt-4">
+      <div className="flex">
+        <Typography variant="h2" className="flex-grow">
+          Scene {sceneIndex}
+        </Typography>
+        <IconButton component={Link} to={backLink}>
+          <Close />
+        </IconButton>
+      </div>
       <Camera onCapture={capture} />
-      <Button
-        startIcon={<ChevronLeft />}
-        component={Link}
-        variant="outlined"
-        size="large"
-        to={`/project/${projectId}/storyboard`}
-      >
-        Back
-      </Button>
     </Container>
   );
 };
