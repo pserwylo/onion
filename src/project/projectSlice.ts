@@ -143,6 +143,7 @@ export const generatePreviewVideo = createAsyncThunk(
     { projectId, sceneIndex }: IGeneratePreviewVideoArgs,
     { getState, dispatch },
   ) => {
+    dispatch(projectSlice.actions.updatePreviewVideo());
     await dispatch(loadProject({ projectId, sceneIndex }));
     const frames = selectFrames(getState() as RootState);
     const scenes = selectScenes(getState() as RootState);
@@ -150,17 +151,14 @@ export const generatePreviewVideo = createAsyncThunk(
 
     let video: string;
     if (scenes.length === 0) {
-      console.log(`Rendering simple movie`);
       // Simple movie, no scenes
       video = await generateVideoFromFrames(frames, frameRate);
     } else if (sceneIndex !== undefined) {
-      console.log(`Rendering individual scene ${sceneIndex}`);
       // Individual scene.
-      const scene = scenes[sceneIndex];
+      const scene = scenes[parseInt(sceneIndex, 10)];
       const sceneFrames = frames.filter((f) => f.scene === scene.id);
       video = await generateVideoFromFrames(sceneFrames, frameRate);
     } else {
-      console.log(`Rendering all scenes`);
       // Full movie, including scenes (will render storyboards in place of scene with no frames).
       const framesToRender: FrameDTO[] = [];
       for (let i = 0; i < scenes.length; i++) {
@@ -169,16 +167,14 @@ export const generatePreviewVideo = createAsyncThunk(
         const sceneFrames = frames.filter((f) => f.scene === scene.id);
 
         if (sceneFrames.length === 0) {
+          // Skip the scene if there is no image in the storyboard.
+          // We don't allow frames to be added when there is no scene image, instead
+          // we redirect them to the "take photo of scene for storyboard" screen.
           if (!scene.image) {
-            console.log(
-              `Scene ${i}: Skipping scene without an image or frames`,
-            );
             continue;
           }
 
-          console.log(
-            `Scene ${i}: Building frame from a blank storyboard scene.`,
-          );
+          // Render the storyboard picture for 2 seconds in lieu of any frames being available.
           framesToRender.push({
             scene: scene.id,
             image: scene.image,
@@ -187,22 +183,13 @@ export const generatePreviewVideo = createAsyncThunk(
             id: uuid(),
           } as FrameDTO);
         } else {
-          console.log(
-            `Scene ${i}: Adding ${sceneFrames.length} frames to the movie from scene. `,
-            sceneFrames,
-          );
           framesToRender.push(...sceneFrames);
         }
       }
 
-      console.log(
-        `Building video from ${framesToRender.length} frames. `,
-        framesToRender,
-      );
       video = await generateVideoFromFrames(framesToRender, frameRate);
     }
 
-    console.log(`Updating preview video to: ${video}`);
     dispatch(projectSlice.actions.updatePreviewVideo(video));
   },
 );
@@ -213,13 +200,21 @@ export const addSceneImage = createAsyncThunk(
     const db = await getDB();
     const scene = selectScene(getState() as RootState);
     if (scene == null) {
+      console.log("No scene found, not adding image");
       return;
     }
 
-    scene.image = image;
-    dispatch(projectSlice.actions.updateScene(scene));
+    console.log("Adding image to scene: ", { scene, image });
 
-    db.put("scenes", scene);
+    const updatedScene: SceneDTO = {
+      ...scene,
+      image,
+    };
+
+    console.log("Updated scene: ", { updatedScene });
+    dispatch(projectSlice.actions.updateScene(updatedScene));
+
+    db.put("scenes", updatedScene);
   },
 );
 
@@ -321,7 +316,7 @@ export const projectSlice = createSlice({
       );
       state.selectedFrameIds = [];
     },
-    updatePreviewVideo: (state, action: PayloadAction<string>) => {
+    updatePreviewVideo: (state, action: PayloadAction<string | undefined>) => {
       state.previewVideo = action.payload;
     },
     updateScene: (state, action: PayloadAction<SceneDTO>) => {

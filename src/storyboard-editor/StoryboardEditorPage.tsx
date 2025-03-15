@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  ButtonProps,
   Container,
   Grid2 as Grid,
   IconButton,
@@ -8,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "../store/hooks.ts";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, LinkProps, useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
 import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
@@ -87,7 +88,7 @@ export const StoryboardEditorPage = () => {
           Watch
         </Button>
       </Box>
-      <Grid container spacing={1} className="mt-8">
+      <Grid container spacing={1} className="my-8">
         {scenes.map((s, i) => (
           <Grid size={6} key={s.id}>
             <Item className="flex flex-col">
@@ -100,16 +101,22 @@ export const StoryboardEditorPage = () => {
   );
 };
 
-const SceneButton = styled(Button)({
-  border: "solid 3px #41403E",
-  borderTopLeftRadius: "255px 8px",
-  borderTopRightRadius: "10px 225px",
-  borderBottomRightRadius: "225px 10px",
-  borderBottomLeftRadius: "8px 255px",
-  "&:hover": {
-    boxShadow: "2px 8px 4px -6px hsla(0,0%,0%,.3)",
-  },
-}) as typeof Button; // https://github.com/mui/material-ui/issues/22728
+type ISceneButtonProps = {
+  hasImage?: boolean;
+};
+
+const SceneButton: React.FC<ButtonProps & ISceneButtonProps & LinkProps> =
+  styled(Button)<ISceneButtonProps>((props) => ({
+    border: "solid 3px",
+    borderColor: props.hasImage ? "#41403E" : "#d3d3d3",
+    borderTopLeftRadius: "255px 8px",
+    borderTopRightRadius: "10px 225px",
+    borderBottomRightRadius: "225px 10px",
+    borderBottomLeftRadius: "8px 255px",
+    "&:hover": {
+      boxShadow: "2px 8px 4px -6px hsla(0,0%,0%,.3)",
+    },
+  }));
 
 type ISceneTileProps = {
   projectId: string;
@@ -140,6 +147,7 @@ const SceneTile = ({ projectId, scene, index }: ISceneTileProps) => {
   return (
     <SceneButton
       component={Link}
+      hasImage={Boolean(scene.image)}
       className="border-1 m-3 p-3 flex-grow relative"
       variant="outlined"
       to={`/project/${projectId}/scene/${index}`}

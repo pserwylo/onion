@@ -27,7 +27,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
-  Help,
   Layers,
   LayersClear,
   PlayCircle,
@@ -120,9 +119,6 @@ const ProjectEditor = () => {
               }
             >
               <ChevronRight />
-            </IconButton>
-            <IconButton component={Link} className="self-start" to="/">
-              <Help />
             </IconButton>
             <IconButton
               component={Link}

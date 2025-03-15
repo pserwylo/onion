@@ -1,8 +1,8 @@
 import { generatePreviewVideo, selectPreviewVideo } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useEffect } from "react";
-import { Box, Button, Container } from "@mui/material";
-import { ChevronLeft, CloudDownload } from "@mui/icons-material";
+import { Box, Button, Container, IconButton, Typography } from "@mui/material";
+import { Close, CloudDownload } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router";
 
@@ -25,29 +25,27 @@ const VideoPreview = () => {
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2">
-      <video src={previewVideo} controls autoPlay={true} />
+      <Box className="flex gap-4 mt-4">
+        <Typography variant="h2" className="flex-grow">
+          Watch
+        </Typography>
+        <IconButton component={Link} to={backLink}>
+          <Close />
+        </IconButton>
+      </Box>
       <Box className="flex gap-4">
-        <Button
-          component={Link}
-          to={backLink}
-          startIcon={<ChevronLeft />}
-          size="large"
-          sx={{ flexGrow: 1 }}
-          variant="contained"
-        >
-          Back
-        </Button>
         <Button
           component="a"
           href={previewVideo}
           download="video.webm"
           startIcon={<CloudDownload />}
-          size="large"
+          size="small"
           variant="outlined"
         >
           Download
         </Button>
       </Box>
+      <video src={previewVideo} controls autoPlay={true} />
     </Container>
   );
 };
