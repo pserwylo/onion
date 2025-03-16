@@ -17,7 +17,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { CameraAlt, Cameraswitch } from "@mui/icons-material";
+import { CameraAlt, Cameraswitch, Close, Help } from "@mui/icons-material";
 import clsx from "clsx";
 
 type IProps = {
@@ -166,6 +166,7 @@ const CameraSelector = (props: ICameraSelectorProps) => {
   const [status, setStatus] = useState<"pending" | "fulfilled" | "error">(
     "pending",
   );
+  const [showHelp, setShowHelp] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
   useEffect(() => {
@@ -200,8 +201,6 @@ const CameraSelector = (props: ICameraSelectorProps) => {
       return <CircularProgress variant="indeterminate" />;
     }
 
-    console.log(devices);
-
     return (
       <List sx={{ pt: 0 }}>
         {devices.map((device) => (
@@ -222,7 +221,25 @@ const CameraSelector = (props: ICameraSelectorProps) => {
 
   return (
     <Dialog onClose={handleClose} open={open}>
-      <DialogTitle>Select Camera</DialogTitle>
+      <div className="flex w-full pr-4">
+        <div className="flex-grow">
+          <DialogTitle>Select Camera</DialogTitle>
+        </div>
+        <IconButton onClick={() => setShowHelp(!showHelp)}>
+          <Help />
+        </IconButton>
+        <IconButton onClick={handleClose}>
+          <Close />
+        </IconButton>
+      </div>
+      {showHelp && (
+        <Typography className="py-4 px-4 pt-4">
+          If the camera is always blury, try choosing a different one. Most
+          modern smart phones have multiple cameras on the back, each with
+          different lenses (e.g. wide-angle, super-macro, etc). Some laptops
+          even have infrared cameras.
+        </Typography>
+      )}
       {renderContent()}
     </Dialog>
   );
