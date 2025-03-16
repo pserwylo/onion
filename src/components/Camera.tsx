@@ -1,10 +1,19 @@
 import Webcam from "react-webcam";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
+  Avatar,
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogTitle,
   IconButton,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -18,7 +27,8 @@ type IProps = {
 };
 
 const Camera = ({ onCapture, overlay, actions }: IProps) => {
-  const [selfieCam, setSelfieCam] = useState(false);
+  const [showCameraSelect, setShowCameraSelect] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | undefined>();
   const [webcamStatus, setWebcamStatus] = useState<
     "initialising" | "connected" | "error"
   >("initialising");
@@ -31,13 +41,10 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
     onCapture(image ?? null);
   }, [onCapture, webcamRef]);
 
-  const reverse = () => {
-    setSelfieCam(!selfieCam);
-  };
-
   const videoConstraints = {
     width: 640,
-    facingMode: selfieCam ? "user" : "environment",
+    facingMode: deviceId ? "environment" : undefined,
+    deviceId,
   };
 
   return (
@@ -48,7 +55,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
           <Button
             variant="text"
             size="small"
-            onClick={() => setSelfieCam(!selfieCam)}
+            onClick={() => setShowCameraSelect(true)}
             startIcon={<Cameraswitch />}
           >
             Try different webcam
@@ -66,7 +73,7 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
           <Button
             variant="text"
             size="small"
-            onClick={() => setSelfieCam(!selfieCam)}
+            onClick={() => setShowCameraSelect(true)}
             startIcon={<Cameraswitch />}
           >
             Try different webcam
@@ -77,17 +84,17 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
       <a
         href="#"
         className="block relative max-w-full"
-        onClick={(e) => {
-          e.preventDefault();
-          capture();
-        }}
+        onClick={() => capture()}
       >
         <Webcam
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/webp"
           onUserMediaError={() => setWebcamStatus("error")}
-          onUserMedia={() => setWebcamStatus("connected")}
+          onUserMedia={(stream) => {
+            setWebcamStatus("connected");
+            setDeviceId(stream.getTracks()[0].getSettings().deviceId);
+          }}
           width={640}
           disablePictureInPicture
           className={clsx("camera camera--feed", {
@@ -107,7 +114,13 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
             <Box className="absolute flex top-4 right-4 px-1 font-md bg-white/20 color-white text-white">
               {actions}
               <Tooltip title="Switch camera">
-                <IconButton onClick={reverse}>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowCameraSelect(true);
+                  }}
+                >
                   <Cameraswitch />
                 </IconButton>
               </Tooltip>
@@ -129,7 +142,89 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
           </Button>
         </div>
       )}
+
+      <CameraSelector
+        open={showCameraSelect}
+        selectedDeviceId={deviceId}
+        onClose={(deviceId) => {
+          setDeviceId(deviceId);
+          setShowCameraSelect(false);
+        }}
+      />
     </div>
+  );
+};
+
+export interface ICameraSelectorProps {
+  open: boolean;
+  selectedDeviceId?: string;
+  onClose: (deviceId?: string) => void;
+}
+
+const CameraSelector = (props: ICameraSelectorProps) => {
+  const { onClose, selectedDeviceId, open } = props;
+  const [status, setStatus] = useState<"pending" | "fulfilled" | "error">(
+    "pending",
+  );
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+
+  useEffect(() => {
+    (async function () {
+      try {
+        const enumeratedDevices =
+          await navigator.mediaDevices.enumerateDevices();
+        setDevices(enumeratedDevices.filter((d) => d.kind === "videoinput"));
+        setStatus("fulfilled");
+      } catch (e) {
+        console.error(e);
+        setStatus("error");
+      }
+    })();
+  }, []);
+
+  const handleClose = () => {
+    onClose(selectedDeviceId);
+  };
+
+  const renderContent = () => {
+    if (status === "error") {
+      return (
+        <Alert color="error">
+          An error occurred trying to list cameras. Have you granted access to
+          view your camera?
+        </Alert>
+      );
+    }
+
+    if (status === "pending") {
+      return <CircularProgress variant="indeterminate" />;
+    }
+
+    console.log(devices);
+
+    return (
+      <List sx={{ pt: 0 }}>
+        {devices.map((device) => (
+          <ListItem disablePadding key={device.deviceId}>
+            <ListItemButton onClick={() => onClose(device.deviceId)}>
+              <ListItemAvatar>
+                <Avatar>
+                  <CameraAlt />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={device.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    );
+  };
+
+  return (
+    <Dialog onClose={handleClose} open={open}>
+      <DialogTitle>Select Camera</DialogTitle>
+      {renderContent()}
+    </Dialog>
   );
 };
 
