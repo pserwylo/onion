@@ -17,6 +17,7 @@ import { HomePage } from "./home/HomePage.tsx";
 import { NewProjectPage } from "./new-project/NewProjectPage.tsx";
 import { StoryboardEditorPage } from "./storyboard-editor/StoryboardEditorPage.tsx";
 import ScenePhotoEditor from "./project/ScenePhotoEditor.tsx";
+import DebugPage from "./components/DebugPage.tsx";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
                 path="/project/:projectId/scene/:sceneIndex/preview"
                 element={<VideoPreview />}
               />
+              <Route path="/debug" element={<DebugPage />} />
             </Routes>
           </HashRouter>
         </ThemeProvider>
