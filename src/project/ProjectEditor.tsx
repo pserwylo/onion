@@ -194,14 +194,26 @@ const ProjectEditor = () => {
         actions={
           <>
             <Tooltip title="Frame rate (fps)">
-              <IconButton onClick={() => dispatch(toggleFrameRate())}>
+              <IconButton
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(toggleFrameRate());
+                }}
+              >
                 <Badge badgeContent={project.frameRate}>
                   <Speed />
                 </Badge>
               </IconButton>
             </Tooltip>
             <Tooltip title="Onion skin">
-              <IconButton onClick={() => dispatch(toggleOnionSkin())}>
+              <IconButton
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(toggleOnionSkin());
+                }}
+              >
                 <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
               </IconButton>
             </Tooltip>
