@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import { CameraAlt, Cameraswitch, Close, Help } from "@mui/icons-material";
 import clsx from "clsx";
+import { useAppDispatch } from "../store/hooks.ts";
+import { setPreferredDeviceId, useSettings } from "../settingsSlice.ts";
 
 type IProps = {
   onCapture: (image: string | null) => void;
@@ -28,13 +30,18 @@ type IProps = {
 
 const Camera = ({ onCapture, overlay, actions }: IProps) => {
   const [showCameraSelect, setShowCameraSelect] = useState(false);
-  const [deviceId, setDeviceId] = useState<string | undefined>();
   const [webcamStatus, setWebcamStatus] = useState<
     "initialising" | "connected" | "error"
   >("initialising");
 
+  const settings = useSettings();
+
   // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
   const webcamRef = useRef<Webcam>(null);
+
+  const dispatch = useAppDispatch();
+
+  console.log("Settings: ", settings);
 
   const capture = useCallback(async () => {
     const image = webcamRef.current?.getScreenshot();
@@ -43,8 +50,8 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
 
   const videoConstraints = {
     width: 640,
-    facingMode: deviceId ? "environment" : undefined,
-    deviceId,
+    facingMode: settings?.preferredCameraDeviceId ? "environment" : undefined,
+    deviceId: settings?.preferredCameraDeviceId,
   };
 
   return (
@@ -93,7 +100,6 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
           onUserMediaError={() => setWebcamStatus("error")}
           onUserMedia={(stream) => {
             setWebcamStatus("connected");
-            setDeviceId(stream.getTracks()[0].getSettings().deviceId);
           }}
           width={640}
           disablePictureInPicture
@@ -145,9 +151,12 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
 
       <CameraSelector
         open={showCameraSelect}
-        selectedDeviceId={deviceId}
-        onClose={(deviceId) => {
-          setDeviceId(deviceId);
+        selectedDeviceId={settings?.preferredCameraDeviceId}
+        onClose={async (deviceId) => {
+          if (deviceId) {
+            dispatch(setPreferredDeviceId(deviceId));
+          }
+
           setShowCameraSelect(false);
         }}
       />
@@ -174,6 +183,7 @@ const CameraSelector = (props: ICameraSelectorProps) => {
       try {
         const enumeratedDevices =
           await navigator.mediaDevices.enumerateDevices();
+        console.log("Devices: ", enumeratedDevices);
         setDevices(enumeratedDevices.filter((d) => d.kind === "videoinput"));
         setStatus("fulfilled");
       } catch (e) {
