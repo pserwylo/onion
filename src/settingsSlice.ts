@@ -1,9 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "./store/store";
-import { getDB, SettingsDTO } from "./store/db.ts";
+import { CameraDevice, getDB, SettingsDTO } from "./store/db.ts";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useAppDispatch } from "./store/hooks.ts";
+
+const IDB_KEY = "1";
 
 export const loadSettings = createAsyncThunk(
   "settings/loadSettings",
@@ -13,26 +16,33 @@ export const loadSettings = createAsyncThunk(
       return cached;
     }
 
+    const settings = (await readSettings()) ?? {
+      preferredCamera: undefined,
+      cameras: undefined,
+    };
+
     const db = await getDB();
-    const cursor = await db
-      .transaction("settings")
-      .objectStore("settings")
-      .openCursor();
+    await db.put("settings", settings, IDB_KEY);
+    dispatch(settingsSlice.actions.initSettings(settings));
+    return settings;
+  },
+);
 
-    let settings: SettingsDTO | undefined = cursor?.value;
+const readSettings = async () => {
+  const db = await getDB();
+  return db.get("settings", IDB_KEY);
+};
 
-    if (!settings) {
-      console.log(
-        "settingsSlice::loadSettings() creating settings for the first time (it wasn't in the store)",
-      );
-      settings = {
-        preferredCameraDeviceId: undefined,
-      };
-    }
+export const setCameras = createAsyncThunk(
+  "settings/setPreferredDeviceId",
+  async (cameras: CameraDevice[], { dispatch }) => {
+    const db = await getDB();
+    const settings: SettingsDTO = {
+      ...(await readSettings()),
+      cameras,
+    };
 
-    console.log("settingsSlice::loadSettings() calling initSettings() ", {
-      settings,
-    });
+    await db.put("settings", settings, IDB_KEY);
     dispatch(settingsSlice.actions.initSettings(settings));
     return settings;
   },
@@ -43,20 +53,11 @@ export const setPreferredDeviceId = createAsyncThunk(
   async (deviceId: string, { dispatch }) => {
     const db = await getDB();
     const settings: SettingsDTO = {
-      preferredCameraDeviceId: deviceId,
+      ...(await readSettings()),
+      preferredCamera: deviceId,
     };
 
-    console.log(
-      "settingsSlice::setPreferredDeviceId() Updating preferredCameraDeviceId. Will persist settings. ",
-      settings,
-    );
-
-    db.put("settings", settings);
-
-    console.log(
-      "settingsSlice::setPreferredDeviceId() calling initSettings() ",
-      settings,
-    );
+    await db.put("settings", settings, IDB_KEY);
     dispatch(settingsSlice.actions.initSettings(settings));
     return settings;
   },
@@ -75,15 +76,12 @@ export const settingsSlice = createSlice({
 });
 
 export const useSettings = () => {
+  const dispatch = useAppDispatch();
   useEffect(() => {
-    loadSettings();
-  }, []);
+    dispatch(loadSettings());
+  }, [dispatch]);
 
-  const settings = useSelector(selectSettings);
-
-  console.log("useSettings ", settings);
-
-  return settings;
+  return useSelector(selectSettings);
 };
 
 // Other code such as selectors can use the imported `RootState` type

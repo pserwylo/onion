@@ -1,7 +1,13 @@
 import { DBSchema, openDB } from "idb";
 
+export type CameraDevice = {
+  id: string;
+  label: string;
+};
+
 export type SettingsDTO = {
-  preferredCameraDeviceId: string | undefined;
+  cameras?: CameraDevice[];
+  preferredCamera?: string;
 };
 
 export type ProjectDTO = {
