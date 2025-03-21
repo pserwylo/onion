@@ -41,6 +41,7 @@ const ProjectEditor = () => {
     projectId: string;
     sceneIndex: string;
   }>();
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const onionSkinImages = useSelector(selectOnionSkinImages);

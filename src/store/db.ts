@@ -1,5 +1,15 @@
 import { DBSchema, openDB } from "idb";
 
+export type CameraDevice = {
+  id: string;
+  label: string;
+};
+
+export type SettingsDTO = {
+  cameras?: CameraDevice[];
+  preferredCamera?: string;
+};
+
 export type ProjectDTO = {
   id: string;
   frameRate: number;
@@ -36,6 +46,10 @@ interface OnionDB extends DBSchema {
     key: string;
     value: ProjectDTO;
   };
+  settings: {
+    key: string;
+    value: SettingsDTO;
+  };
 }
 
 export const getDB = async () =>
@@ -57,5 +71,7 @@ export const getDB = async () =>
       d.createObjectStore("projects", {
         keyPath: "id",
       });
+
+      d.createObjectStore("settings");
     },
   });

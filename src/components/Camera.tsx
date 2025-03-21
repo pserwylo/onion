@@ -1,24 +1,21 @@
 import Webcam from "react-webcam";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  Alert,
-  Avatar,
   Box,
   Button,
   CircularProgress,
   Dialog,
   DialogTitle,
   IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { CameraAlt, Cameraswitch, Close, Help } from "@mui/icons-material";
 import clsx from "clsx";
+import { useAppDispatch } from "../store/hooks.ts";
+import { setPreferredDeviceId, useSettings } from "../settingsSlice.ts";
+import CameraInit from "./CameraInit.tsx";
+import CameraList from "./CameraList.tsx";
 
 type IProps = {
   onCapture: (image: string | null) => void;
@@ -27,8 +24,8 @@ type IProps = {
 };
 
 const Camera = ({ onCapture, overlay, actions }: IProps) => {
+  const dispatch = useAppDispatch();
   const [showCameraSelect, setShowCameraSelect] = useState(false);
-  const [deviceId, setDeviceId] = useState<string | undefined>();
   const [webcamStatus, setWebcamStatus] = useState<
     "initialising" | "connected" | "error"
   >("initialising");
@@ -36,15 +33,21 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
   // https://github.com/mozmorris/react-webcam/issues/409#issuecomment-2404446979
   const webcamRef = useRef<Webcam>(null);
 
+  const settings = useSettings();
+
   const capture = useCallback(async () => {
     const image = webcamRef.current?.getScreenshot();
     onCapture(image ?? null);
   }, [onCapture, webcamRef]);
 
+  if (settings?.preferredCamera === undefined) {
+    return <CameraInit />;
+  }
+
   const videoConstraints = {
     width: 640,
-    facingMode: deviceId ? "environment" : undefined,
-    deviceId,
+    facingMode: settings?.preferredCamera ? "environment" : undefined,
+    deviceId: settings?.preferredCamera,
   };
 
   return (
@@ -84,16 +87,18 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
       <a
         href="#"
         className="block relative max-w-full"
-        onClick={() => capture()}
+        onClick={(e) => {
+          e.preventDefault();
+          capture();
+        }}
       >
         <Webcam
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/webp"
           onUserMediaError={() => setWebcamStatus("error")}
-          onUserMedia={(stream) => {
+          onUserMedia={() => {
             setWebcamStatus("connected");
-            setDeviceId(stream.getTracks()[0].getSettings().deviceId);
           }}
           width={640}
           disablePictureInPicture
@@ -145,9 +150,12 @@ const Camera = ({ onCapture, overlay, actions }: IProps) => {
 
       <CameraSelector
         open={showCameraSelect}
-        selectedDeviceId={deviceId}
-        onClose={(deviceId) => {
-          setDeviceId(deviceId);
+        selectedDeviceId={settings?.preferredCamera}
+        onClose={async (deviceId) => {
+          if (deviceId) {
+            dispatch(setPreferredDeviceId(deviceId));
+          }
+
           setShowCameraSelect(false);
         }}
       />
@@ -161,62 +169,20 @@ export interface ICameraSelectorProps {
   onClose: (deviceId?: string) => void;
 }
 
-const CameraSelector = (props: ICameraSelectorProps) => {
-  const { onClose, selectedDeviceId, open } = props;
-  const [status, setStatus] = useState<"pending" | "fulfilled" | "error">(
-    "pending",
-  );
+const CameraSelector = ({
+  onClose,
+  selectedDeviceId,
+  open,
+}: ICameraSelectorProps) => {
   const [showHelp, setShowHelp] = useState(false);
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const settings = useSettings();
 
-  useEffect(() => {
-    (async function () {
-      try {
-        const enumeratedDevices =
-          await navigator.mediaDevices.enumerateDevices();
-        setDevices(enumeratedDevices.filter((d) => d.kind === "videoinput"));
-        setStatus("fulfilled");
-      } catch (e) {
-        console.error(e);
-        setStatus("error");
-      }
-    })();
-  }, []);
+  if (settings?.cameras === undefined) {
+    return null;
+  }
 
   const handleClose = () => {
     onClose(selectedDeviceId);
-  };
-
-  const renderContent = () => {
-    if (status === "error") {
-      return (
-        <Alert color="error">
-          An error occurred trying to list cameras. Have you granted access to
-          view your camera?
-        </Alert>
-      );
-    }
-
-    if (status === "pending") {
-      return <CircularProgress variant="indeterminate" />;
-    }
-
-    return (
-      <List sx={{ pt: 0 }}>
-        {devices.map((device) => (
-          <ListItem disablePadding key={device.deviceId}>
-            <ListItemButton onClick={() => onClose(device.deviceId)}>
-              <ListItemAvatar>
-                <Avatar>
-                  <CameraAlt />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText primary={device.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    );
   };
 
   return (
@@ -240,7 +206,10 @@ const CameraSelector = (props: ICameraSelectorProps) => {
           even have infrared cameras.
         </Typography>
       )}
-      {renderContent()}
+      <CameraList
+        cameras={settings.cameras}
+        onSelect={(camera) => onClose(camera.id)}
+      />
     </Dialog>
   );
 };
