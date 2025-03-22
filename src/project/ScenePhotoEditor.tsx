@@ -34,25 +34,30 @@ const ScenePhotoEditor = () => {
     [navigate, dispatch, sceneIndex, projectId],
   );
 
-  if (scene == null) {
+  if (scene == null || sceneIndex === undefined) {
     return null;
   }
+
+  const sceneIndexInt = parseInt(sceneIndex, 10);
 
   const backLink = scene.image
     ? `/project/${projectId}/scene/${sceneIndex}`
     : `/project/${projectId}/storyboard`;
 
-  // TODO: Taking photo of scene not working...
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2 mt-4">
       <div className="flex">
         <Typography variant="h2" className="flex-grow">
-          Scene {sceneIndex}
+          Scene {sceneIndexInt + 1}
         </Typography>
         <IconButton component={Link} to={backLink}>
           <Close />
         </IconButton>
       </div>
+      <Typography>
+        Take a picture of the storyboard for Scene {sceneIndexInt + 1}. Once
+        taken, you can then animate the scene.
+      </Typography>
       <Camera onCapture={capture} />
     </Container>
   );

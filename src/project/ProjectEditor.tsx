@@ -96,7 +96,7 @@ const ProjectEditor = () => {
           <Box className="flex gap-4 w-full">
             <img alt="scene image" src={scene.image} className="h-24" />
             <Typography variant="h3" className="flex-grow">
-              Scene
+              Scene {sceneIndexInt + 1}
             </Typography>
             <IconButton
               disabled={sceneIndex === "0"}
