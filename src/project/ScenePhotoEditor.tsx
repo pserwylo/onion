@@ -1,11 +1,11 @@
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { addSceneImage, loadProject, selectScene } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
-import { Container, IconButton, Typography } from "@mui/material";
+import { Container, Typography } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import Camera from "../components/Camera.tsx";
-import { Close } from "@mui/icons-material";
 import { useSelector } from "react-redux";
+import PageHeading from "../components/PageHeading.tsx";
 
 const ScenePhotoEditor = () => {
   const dispatch = useAppDispatch();
@@ -46,14 +46,7 @@ const ScenePhotoEditor = () => {
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2 mt-4">
-      <div className="flex">
-        <Typography variant="h2" className="flex-grow">
-          Scene {sceneIndexInt + 1}
-        </Typography>
-        <IconButton component={Link} to={backLink}>
-          <Close />
-        </IconButton>
-      </div>
+      <PageHeading title={`Scene ${sceneIndexInt + 1}`} backLink={backLink} />
       <Typography>
         Take a picture of the storyboard for Scene {sceneIndexInt + 1}. Once
         taken, you can then animate the scene.

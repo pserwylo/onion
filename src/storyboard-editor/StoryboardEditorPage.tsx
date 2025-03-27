@@ -23,11 +23,11 @@ import {
   AccessTime,
   BurstMode,
   CameraAlt,
-  Close,
   Help,
   PlayCircle,
 } from "@mui/icons-material";
 import { OverlayText } from "../project/FrameList.tsx";
+import PageHeading from "../components/PageHeading.tsx";
 
 export const StoryboardEditorPage = () => {
   const dispatch = useAppDispatch();
@@ -53,19 +53,17 @@ export const StoryboardEditorPage = () => {
 
   return (
     <Container maxWidth="sm">
-      <Box className="flex gap-4 mt-4">
-        <Typography variant="h2" className="flex-grow">
-          Storyboard
-        </Typography>
-        {hasScene && (
-          <IconButton onClick={() => setShowHelp(!showHelp)}>
-            <Help />
-          </IconButton>
-        )}
-        <IconButton component={Link} to="/">
-          <Close />
-        </IconButton>
-      </Box>
+      <PageHeading
+        title="Storyboard"
+        backLink="/"
+        actions={
+          hasScene ? (
+            <IconButton onClick={() => setShowHelp(!showHelp)}>
+              <Help />
+            </IconButton>
+          ) : undefined
+        }
+      />
       {(!hasScene || showHelp) && (
         <Typography className="pt-4">
           A storyboard is a way of planning animated films, movies, or

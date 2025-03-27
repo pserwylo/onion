@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router";
 import { addProject } from "../home/homeSlice.ts";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useState } from "react";
+import PageHeading from "../components/PageHeading.tsx";
 
 export const NewProjectPage = () => {
   const dispatch = useAppDispatch();
@@ -31,7 +32,7 @@ export const NewProjectPage = () => {
 
   return (
     <Container maxWidth="sm">
-      <Typography variant="h1">Get started</Typography>
+      <PageHeading title="Get Started" backLink="/" />
       <RadioGroup name="project-type" className="flex flex-col gap-4 mt-8">
         <Paper className="flex gap-4">
           <FormControlLabel
