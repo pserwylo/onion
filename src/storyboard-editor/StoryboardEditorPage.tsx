@@ -23,6 +23,7 @@ import {
   AccessTime,
   BurstMode,
   CameraAlt,
+  Delete,
   Help,
   PlayCircle,
 } from "@mui/icons-material";
@@ -75,15 +76,25 @@ export const StoryboardEditorPage = () => {
           </a>
         </Typography>
       )}
-      <Box className="pt-4">
+      <Box className="pt-4 flex gap-4">
         <Button
           startIcon={<PlayCircle />}
-          variant="outlined"
+          variant="contained"
           size="small"
           component={Link}
           to={`/project/${projectId}/preview`}
         >
           Watch
+        </Button>
+        <Button
+          startIcon={<Delete />}
+          variant="outlined"
+          color="error"
+          size="small"
+          component={Link}
+          to={`/project/${projectId}/delete`}
+        >
+          Delete
         </Button>
       </Box>
       <Grid container spacing={1} className="my-8">

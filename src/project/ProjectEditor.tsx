@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
+  Delete,
   Layers,
   LayersClear,
   PlayCircle,
@@ -132,7 +133,7 @@ const ProjectEditor = () => {
           <Box className="flex gap-4">
             <Button
               startIcon={<PlayCircle />}
-              variant="outlined"
+              variant="contained"
               size="small"
               component={Link}
               to={`/project/${projectId}/scene/${sceneIndex}/preview`}
@@ -141,12 +142,22 @@ const ProjectEditor = () => {
             </Button>
             <Button
               startIcon={<CameraAlt />}
-              variant="outlined"
+              variant="contained"
               size="small"
               component={Link}
               to={`/project/${projectId}/scene/${sceneIndex}/photo`}
             >
               Edit
+            </Button>
+            <Button
+              startIcon={<Delete />}
+              variant="outlined"
+              color="error"
+              size="small"
+              component={Link}
+              to={`/project/${projectId}/scene/${sceneIndex}/delete`}
+            >
+              Delete
             </Button>
           </Box>
         </Box>
@@ -160,15 +171,27 @@ const ProjectEditor = () => {
               <Close />
             </IconButton>
           </Box>
-          <Button
-            startIcon={<PlayCircle />}
-            variant="outlined"
-            size="small"
-            component={Link}
-            to={`/project/${projectId}/preview`}
-          >
-            Watch
-          </Button>
+          <Box className="flex gap-4">
+            <Button
+              startIcon={<PlayCircle />}
+              variant="contained"
+              size="small"
+              component={Link}
+              to={`/project/${projectId}/preview`}
+            >
+              Watch
+            </Button>
+            <Button
+              startIcon={<Delete />}
+              variant="outlined"
+              color="error"
+              size="small"
+              component={Link}
+              to={`/project/${projectId}/delete`}
+            >
+              Delete
+            </Button>
+          </Box>
         </Box>
       )}
 

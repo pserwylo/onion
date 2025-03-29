@@ -40,7 +40,7 @@ const VideoPreview = () => {
           download="video.webm"
           startIcon={<CloudDownload />}
           size="small"
-          variant="outlined"
+          variant="contained"
         >
           Download
         </Button>

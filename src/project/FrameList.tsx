@@ -15,9 +15,15 @@ type IFrameListProps = {
   project: ProjectDTO;
   frames: FrameDTO[];
   className?: string;
+  readOnly?: boolean;
 };
 
-const FrameList = ({ project, frames, className }: IFrameListProps) => {
+const FrameList = ({
+  project,
+  frames,
+  className,
+  readOnly,
+}: IFrameListProps) => {
   const dispatch = useAppDispatch();
   const selectedFrameIds = useSelector(selectSelectedFrameIds);
   const navigate = useNavigate();
@@ -51,32 +57,33 @@ const FrameList = ({ project, frames, className }: IFrameListProps) => {
               }
               key={i}
               index={i}
-              selected={selectedFrameIds.includes(frame.id)}
+              selected={readOnly ? false : selectedFrameIds.includes(frame.id)}
             />
           </li>
         ))}
       </ul>
 
-      {selectedFrameIds.length > 0 && (
+      {!readOnly && selectedFrameIds.length > 0 && (
         <div className="mt-2 mb-4 flex gap-2">
+          <Button
+            onClick={handleEdit}
+            startIcon={<Edit />}
+            variant="outlined"
+            disabled={selectedFrameIds.length > 1}
+          >
+            Edit
+          </Button>
           <Button
             onClick={handleDelete}
             startIcon={<Delete />}
             variant="outlined"
             color="error"
           >
-            Delete {selectedFrameIds.length} Frame
-            {selectedFrameIds.length === 1 ? "" : "s"}
+            Delete
+            {selectedFrameIds.length > 0
+              ? ` ${selectedFrameIds.length} Frames`
+              : ""}
           </Button>
-          {selectedFrameIds.length === 1 && (
-            <Button
-              onClick={handleEdit}
-              startIcon={<Edit />}
-              variant="outlined"
-            >
-              Edit Frame
-            </Button>
-          )}
         </div>
       )}
     </div>

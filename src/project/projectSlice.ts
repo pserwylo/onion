@@ -69,6 +69,68 @@ export const toggleFrameRate = createAsyncThunk(
   },
 );
 
+type IDeleteProjectArgs = {
+  projectId: string;
+};
+
+export const deleteProject = createAsyncThunk(
+  "project/deleteProject",
+  async ({ projectId }: IDeleteProjectArgs) => {
+    console.log(`Deleting project ${projectId}`);
+    const db = await getDB();
+
+    // Delete scenes belonging to the project.
+    // If it is a simple movie without scenes, this will just run and delete nothing.
+    const txScene = db.transaction("scenes", "readwrite");
+    const indexScene = txScene.store.index("project");
+    let cursorScene = await indexScene.openCursor(projectId);
+    while (cursorScene) {
+      cursorScene.delete();
+      cursorScene = await cursorScene.continue();
+    }
+
+    // Delete frames belonging to the project
+    const txFrame = db.transaction("frames", "readwrite");
+    const indexFrame = txFrame.store.index("project");
+    let cursorFrame = await indexFrame.openCursor(projectId);
+    while (cursorFrame) {
+      cursorFrame.delete();
+      cursorFrame = await cursorFrame.continue();
+    }
+
+    await db.delete("projects", projectId);
+  },
+);
+
+type IDeleteSceneArgs = {
+  projectId: string;
+  sceneIndex: number;
+};
+
+export const deleteScene = createAsyncThunk(
+  "project/deleteScene",
+  async ({ projectId, sceneIndex }: IDeleteSceneArgs, { dispatch }) => {
+    console.log(`Deleting scene ${sceneIndex + 1} from project ${projectId}`);
+    const db = await getDB();
+    const scenes = await db.getAllFromIndex("scenes", "project", projectId);
+    const toDelete = scenes[sceneIndex];
+    await db.delete("scenes", toDelete.id);
+
+    // Delete frames belonging to the scene.
+    const tx = db.transaction("frames", "readwrite");
+    const index = tx.store.index("scene");
+    let cursor = await index.openCursor(toDelete.id);
+    while (cursor) {
+      cursor.delete();
+      cursor = await cursor.continue();
+    }
+
+    await dispatch(
+      loadProject({ projectId, sceneIndex: sceneIndex.toString() }),
+    );
+  },
+);
+
 type ILoadProjectArgs = {
   projectId: string;
   sceneIndex?: string;

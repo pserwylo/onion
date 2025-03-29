@@ -42,6 +42,48 @@ export const addProject = createAsyncThunk(
   },
 );
 
+export const loadProjectThumbnail = async (projectId: string) => {
+  return (await thumbFromFrame(projectId)) ?? (await thumbFromScene(projectId));
+};
+
+const thumbFromFrame = async (projectId: string) => {
+  const db = await getDB();
+  const framesTx = db.transaction("frames");
+  const framesStore = framesTx.objectStore("frames");
+  const framesIndex = framesStore.index("project");
+
+  const range = IDBKeyRange.only(projectId);
+  let cursor = await framesIndex.openCursor(range);
+  while (cursor) {
+    const frame = cursor.value;
+    if (frame.image) {
+      return frame.image;
+    }
+    cursor = await cursor.continue();
+  }
+
+  return undefined;
+};
+
+const thumbFromScene = async (projectId: string) => {
+  const db = await getDB();
+  const scenesTx = db.transaction("scenes");
+  const scenesStore = scenesTx.objectStore("scenes");
+  const scenesIndex = scenesStore.index("project");
+
+  const range = IDBKeyRange.only(projectId);
+  let cursor = await scenesIndex.openCursor(range);
+  while (cursor) {
+    const scene = cursor.value;
+    if (scene.image) {
+      return scene.image;
+    }
+    cursor = await cursor.continue();
+  }
+
+  return undefined;
+};
+
 export const loadProjects = createAsyncThunk(
   "project/loadProject",
   async (_: void, { dispatch }) => {
@@ -49,49 +91,12 @@ export const loadProjects = createAsyncThunk(
     const plainProjects = await db.getAll("projects");
     const projectsWithThumbs: ProjectSummaryDTO[] = [];
 
-    const thumbFromFrame = async (projectId: string) => {
-      const framesTx = db.transaction("frames");
-      const framesStore = framesTx.objectStore("frames");
-      const framesIndex = framesStore.index("project");
-
-      const range = IDBKeyRange.only(projectId);
-      let cursor = await framesIndex.openCursor(range);
-      while (cursor) {
-        const frame = cursor.value;
-        if (frame.image) {
-          return frame.image;
-        }
-        cursor = await cursor.continue();
-      }
-
-      return undefined;
-    };
-
-    const thumbFromScene = async (projectId: string) => {
-      const scenesTx = db.transaction("scenes");
-      const scenesStore = scenesTx.objectStore("scenes");
-      const scenesIndex = scenesStore.index("project");
-
-      const range = IDBKeyRange.only(projectId);
-      let cursor = await scenesIndex.openCursor(range);
-      while (cursor) {
-        const scene = cursor.value;
-        if (scene.image) {
-          return scene.image;
-        }
-        cursor = await cursor.continue();
-      }
-
-      return undefined;
-    };
-
     let thumbnail: string | undefined;
     for await (const project of plainProjects) {
       const projectId = project.id;
-      thumbnail = await thumbFromFrame(project.id);
-      if (!thumbnail) {
-        thumbnail = await thumbFromScene(project.id);
-      }
+      thumbnail =
+        (await thumbFromFrame(project.id)) ??
+        (await thumbFromScene(project.id));
 
       if (thumbnail) {
         console.log(`${projectId}: found thumbnail.`);

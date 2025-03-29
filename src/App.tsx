@@ -18,6 +18,8 @@ import { NewProjectPage } from "./new-project/NewProjectPage.tsx";
 import { StoryboardEditorPage } from "./storyboard-editor/StoryboardEditorPage.tsx";
 import ScenePhotoEditor from "./project/ScenePhotoEditor.tsx";
 import DebugPage from "./components/DebugPage.tsx";
+import ConfirmDeleteScene from "./delete/ConfirmDeleteScene.tsx";
+import ConfirmDeleteProject from "./delete/ConfirmDeleteProject.tsx";
 
 function App() {
   return (
@@ -53,6 +55,14 @@ function App() {
               <Route
                 path="/project/:projectId/scene/:sceneIndex/preview"
                 element={<VideoPreview />}
+              />
+              <Route
+                path="/project/:projectId/scene/:sceneIndex/delete"
+                element={<ConfirmDeleteScene />}
+              />
+              <Route
+                path="/project/:projectId/delete"
+                element={<ConfirmDeleteProject />}
               />
               <Route path="/debug" element={<DebugPage />} />
             </Routes>
