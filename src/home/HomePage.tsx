@@ -25,7 +25,7 @@ export const HomePage = () => {
   }, [dispatch]);
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" className="flex flex-col gap-4">
       <Typography variant="h1">Animation Time</Typography>
       <Typography variant="h2" className="flex-grow">
         Movies

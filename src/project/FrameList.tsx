@@ -2,7 +2,9 @@ import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
   removeSelectedFrames,
+  selectFrameListScrollIndex,
   selectSelectedFrameIds,
+  setFrameListScrollIndex,
   setFrameSelected,
 } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
@@ -10,23 +12,48 @@ import { Box, Button, Checkbox } from "@mui/material";
 import { Delete, Edit, Pause, Settings } from "@mui/icons-material";
 import clsx from "clsx";
 import { FrameDTO, ProjectDTO } from "../store/db.ts";
+import { useEffect, useRef } from "react";
 
 type IFrameListProps = {
   project: ProjectDTO;
   frames: FrameDTO[];
+  sceneIndex?: string;
   className?: string;
   readOnly?: boolean;
 };
 
 const FrameList = ({
   project,
+  sceneIndex,
   frames,
   className,
   readOnly,
 }: IFrameListProps) => {
   const dispatch = useAppDispatch();
   const selectedFrameIds = useSelector(selectSelectedFrameIds);
+  const scrollFrameIndex = useSelector(selectFrameListScrollIndex);
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const container = containerRef?.current;
+    if (scrollFrameIndex === undefined || container == null) {
+      return;
+    }
+
+    const frameWidth =
+      container.children.length > 1
+        ? container.children[1].getBoundingClientRect().left -
+          container.children[0].getBoundingClientRect().left
+        : (container?.firstElementChild?.clientWidth ?? 100);
+
+    // Offset a little to the left of the frame in question. In practice, this felt a bit better
+    // after originally starting with putting the frame at the far left.
+    container.scrollLeft = Math.max(
+      0,
+      scrollFrameIndex * frameWidth - frameWidth / 2,
+    );
+  }, [scrollFrameIndex]);
 
   const handleDelete = () => {
     dispatch(removeSelectedFrames());
@@ -38,14 +65,20 @@ const FrameList = ({
     }
 
     const id = selectedFrameIds[0];
-    const url = `/project/${project.id!}/frame/${id}`;
+    const url = sceneIndex
+      ? `/project/${project.id!}/scene/${sceneIndex}/frame/${id}`
+      : `/project/${project.id!}/frame/${id}`;
+    dispatch(setFrameListScrollIndex(frames.findIndex((f) => f.id === id)));
     navigate(url);
   };
 
   let frameTime = 0;
   return (
     <div className={className}>
-      <ul className="flex list-none overflow-x-scroll flex-nowrap gap-2">
+      <ul
+        className="flex list-none overflow-x-scroll flex-nowrap gap-2"
+        ref={containerRef}
+      >
         {frames.map((frame, i) => (
           <li key={frame.id}>
             <Frame

@@ -49,6 +49,10 @@ function App() {
                 element={<FrameEditor />}
               />
               <Route
+                path="/project/:projectId/scene/:sceneIndex/frame/:frameId"
+                element={<FrameEditor />}
+              />
+              <Route
                 path="/project/:projectId/preview"
                 element={<VideoPreview />}
               />

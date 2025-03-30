@@ -33,9 +33,18 @@ export const setFrameDuration = createAsyncThunk(
     { frameId, duration }: { frameId: string; duration: number | undefined },
     { getState, dispatch },
   ) => {
-    const frame = selectFrames(getState() as RootState).find(
-      (i) => i.id === frameId,
-    );
+    let index: number | undefined = undefined;
+
+    const frame = selectFrames(getState() as RootState).find((f, i) => {
+      if (f.id === frameId) {
+        // Uh... these frames don't seem sorted. Why does selecting the first frame in the project editor end up with
+        // the third index selected here sometimes?
+        index = i;
+        return true;
+      }
+
+      return false;
+    });
 
     if (frame === undefined) {
       return;
@@ -45,6 +54,17 @@ export const setFrameDuration = createAsyncThunk(
       ...frame,
       duration,
     };
+
+    // Initial thoughts were that this should be persisted throughout editing a frame then navigating back to
+    // the frame list. In practice, while making a movie, I rarely wanted the frame to be selected after I had
+    // finished editing it. This is because I would take all my photo's, then *afterward* I would: select a frame,
+    // set a duration, select another frame, add a duration. Each time having to de-select the previous frame was
+    // a hassle.
+    dispatch(projectSlice.actions.clearSelectedFrames());
+
+    // Return the user to the same position they were editing. Even though we removed the selection, we probably
+    // want to continue editing from subsequent frames near the same position.
+    dispatch(projectSlice.actions.setFrameListScrollIndex(index));
 
     dispatch(projectSlice.actions.updateFrame(newFrame));
     const db = await getDB();
@@ -141,7 +161,7 @@ export const loadProject = createAsyncThunk(
   "project/loadProject",
   async (
     { projectId, sceneIndex, frameId }: ILoadProjectArgs,
-    { dispatch },
+    { dispatch, getState },
   ) => {
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
@@ -150,16 +170,34 @@ export const loadProject = createAsyncThunk(
       return;
     }
 
+    // If we already have loaded this project, and this project already has a specific scroll index set for the
+    // frame list, then we will respect that. Makes editing a set of frames easier because you don't keep getting
+    // pushed to the end of the list.
+    // However, if we are loading a different project, all bets are off and just scroll to the last frame.
+    const previousProject = selectProject(getState() as RootState);
+    const previousFrameListScrollIndex = selectFrameListScrollIndex(
+      getState() as RootState,
+    );
+
     const frames = await db.getAllFromIndex("frames", "project", project.id);
     const scenes = await db.getAllFromIndex("scenes", "project", project.id);
+    const scene =
+      sceneIndex === undefined ? undefined : scenes[parseInt(sceneIndex, 10)];
+
+    const framesToUse =
+      scene === undefined ? frames : frames.filter((f) => f.scene === scene.id);
 
     dispatch(
       projectSlice.actions.initProject({
         project,
         scenes,
-        frames,
+        frames: framesToUse,
         sceneIndex,
         frameId,
+        frameListScrollIndex:
+          previousProject?.id === projectId
+            ? previousFrameListScrollIndex
+            : frames.length,
       }),
     );
   },
@@ -193,9 +231,7 @@ const generateVideoFromFrames = async (
   );
 
   const video = Whammy.fromImageArray(finalFrames, frameRate) as Blob;
-  console.log("Generated video blob: ", video);
   const videoDataUrl = await blobToDataURL(video);
-  console.log("Genrerated data URL: ", videoDataUrl);
   return videoDataUrl;
 };
 
@@ -284,6 +320,7 @@ export const addFrame = createAsyncThunk(
   "project/addFrame",
   async (image: string, { dispatch, getState }) => {
     const { id: project } = selectProject(getState() as RootState);
+    const frames = selectFrames(getState() as RootState);
     const scene = selectScene(getState() as RootState);
     const frame: FrameDTO = {
       id: uuid(),
@@ -292,6 +329,7 @@ export const addFrame = createAsyncThunk(
       scene: scene?.id,
     };
     dispatch(projectSlice.actions.addFrame(frame));
+    dispatch(projectSlice.actions.setFrameListScrollIndex(frames.length + 1));
 
     // Do this last and don't wait for it - it slows the UX down too much.
     const db = await getDB();
@@ -330,6 +368,7 @@ export const projectSlice = createSlice({
     frameId: undefined as string | undefined,
     sceneIndex: undefined as string | undefined,
     selectedFrameIds: [] as string[],
+    frameListScrollIndex: undefined as number | undefined,
     previewVideo: undefined as undefined | string,
   },
   reducers: {
@@ -341,6 +380,7 @@ export const projectSlice = createSlice({
         frames: FrameDTO[];
         frameId?: string;
         sceneIndex?: string;
+        frameListScrollIndex?: number;
       }>,
     ) => {
       state.frames = action.payload.frames;
@@ -348,6 +388,7 @@ export const projectSlice = createSlice({
       state.project = action.payload.project;
       state.frameId = action.payload.frameId;
       state.sceneIndex = action.payload.sceneIndex;
+      state.frameListScrollIndex = action.payload.frameListScrollIndex;
     },
     updateFrame: (state, action: PayloadAction<FrameDTO>) => {
       const frame = action.payload;
@@ -355,6 +396,12 @@ export const projectSlice = createSlice({
     },
     setProject: (state, action: PayloadAction<ProjectDTO>) => {
       state.project = action.payload;
+    },
+    setFrameListScrollIndex: (
+      state,
+      action: PayloadAction<number | undefined>,
+    ) => {
+      state.frameListScrollIndex = action.payload;
     },
     setFrameSelected: (
       state,
@@ -371,6 +418,9 @@ export const projectSlice = createSlice({
     },
     addFrame: (state, action: PayloadAction<FrameDTO>) => {
       state.frames.push(action.payload);
+    },
+    clearSelectedFrames: (state) => {
+      state.selectedFrameIds = [];
     },
     removeSelectedFrames: (state) => {
       state.frames = state.frames.filter(
@@ -426,6 +476,9 @@ export const selectOnionSkinImages = createSelector(
       .reverse(),
 );
 
+export const selectFrameListScrollIndex = (state: RootState) =>
+  state.projects.frameListScrollIndex;
+
 export const selectSelectedFrameIds = (state: RootState) =>
   state.projects.selectedFrameIds;
 
@@ -454,5 +507,6 @@ export const makeSelectSceneSummary =
     };
   };
 
-export const { setFrameSelected } = projectSlice.actions;
+export const { setFrameSelected, setFrameListScrollIndex } =
+  projectSlice.actions;
 export default projectSlice.reducer;

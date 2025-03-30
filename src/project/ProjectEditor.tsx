@@ -200,6 +200,7 @@ const ProjectEditor = () => {
           <FrameList
             project={project}
             frames={frames}
+            sceneIndex={sceneIndex}
             className="w-full mb-2"
           />
         </>

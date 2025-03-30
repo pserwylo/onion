@@ -1,10 +1,5 @@
 import { useNavigate, useParams } from "react-router";
-import {
-  loadProject,
-  selectFrame,
-  selectScenes,
-  setFrameDuration,
-} from "./projectSlice.ts";
+import { loadProject, selectFrame, setFrameDuration } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
 import {
@@ -23,19 +18,18 @@ import PageHeading from "../components/PageHeading.tsx";
 const FrameEditor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { projectId, frameId } = useParams<{
+  const { projectId, sceneIndex, frameId } = useParams<{
     projectId: string;
+    sceneIndex?: string;
     frameId: string;
   }>();
   const frame = useSelector(selectFrame);
-  const scenes = useSelector(selectScenes);
-  const sceneIndex = scenes.findIndex((s) => s.id === frame?.scene);
 
   useEffect(() => {
     if (projectId) {
-      dispatch(loadProject({ projectId, frameId }));
+      dispatch(loadProject({ projectId, sceneIndex, frameId }));
     }
-  }, [dispatch, projectId, frameId]);
+  }, [dispatch, projectId, sceneIndex, frameId]);
 
   if (projectId == null) {
     console.warn("No project ID provided to FrameEditor URL.");
@@ -53,12 +47,12 @@ const FrameEditor = () => {
     return null;
   }
 
-  const backLink = frame.scene
+  const backLink = sceneIndex
     ? `/project/${projectId}/scene/${sceneIndex}`
     : `/project/${projectId}`;
 
-  const handlePause = () => {
-    dispatch(
+  const handlePause = async () => {
+    await dispatch(
       setFrameDuration({
         frameId: frameId,
         duration: frame.duration ? undefined : 1,
