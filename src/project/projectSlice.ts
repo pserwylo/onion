@@ -312,7 +312,22 @@ export const addSceneImage = createAsyncThunk(
     console.log("Updated scene: ", { updatedScene });
     dispatch(projectSlice.actions.updateScene(updatedScene));
 
-    db.put("scenes", updatedScene);
+    await db.put("scenes", updatedScene);
+
+    // When the last scene has an image, then we will automatically add one new empty one ready
+    // to be setup.
+    // In the future perhaps this is best left to the UI. i.e. when the UI renders all the scenes, check
+    // the last one and if it has an image, then render a placeholder "add scene" button which does this.
+    const scenes = await db.getAllFromIndex("scenes", "project", scene.project);
+    const lastScene = scenes[scenes.length - 1]; // There is at least one scene. i.e. "scene.project"
+    if (lastScene.image) {
+      await db.put("scenes", {
+        project: scene.project,
+        image: undefined,
+        id: uuid(),
+        description: undefined,
+      });
+    }
   },
 );
 

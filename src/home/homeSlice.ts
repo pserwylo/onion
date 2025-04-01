@@ -19,7 +19,7 @@ export const addProject = createAsyncThunk(
 
     if (hasScenes) {
       const scenes: SceneDTO[] = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 4; i++) {
         scenes.push({
           id: uuid(),
           project: project.id,
