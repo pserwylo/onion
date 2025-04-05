@@ -9,6 +9,8 @@ import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
 import { getDB, FrameDTO, ProjectDTO, SceneDTO } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
+import { downloadZip, InputWithSizeMeta } from "client-zip";
+import "core-js/actual/typed-array/from-base64";
 
 const MAX_ONION_SKINS = 3;
 export const FRAME_RATES = [5, 15, 25];
@@ -234,6 +236,82 @@ const generateVideoFromFrames = async (
   const videoDataUrl = await blobToDataURL(video);
   return videoDataUrl;
 };
+
+export const generateExportZip = createAsyncThunk(
+  "project/generateExportZip",
+  async (_: void, { getState }) => {
+    // No need to "loadProject()" here, because to get to the video export functionality you must
+    // be on the video preview ,which will already have loaded the project in question.
+    const frames = selectFrames(getState() as RootState);
+    const scenes = selectScenes(getState() as RootState);
+
+    const files: InputWithSizeMeta[] = [];
+
+    const decodeDataUrl = (url: string): Uint8Array => {
+      const prefix = "data:image/webp;base64,";
+
+      // @ts-expect-error polyfil from core-js without types
+      return Uint8Array.fromBase64(url.substring(prefix.length));
+    };
+
+    const padNumber = (num: number, maxNum: number) => {
+      let pad = 1;
+      while (maxNum > 10) {
+        maxNum /= 10;
+        pad++;
+      }
+
+      return (num + 1).toString().padStart(pad, "0");
+    };
+
+    if (scenes.length === 0) {
+      // Simple movie, no scenes
+      files.push(
+        ...frames.map((f, i) => ({
+          name: `frame.${padNumber(i, frames.length)}.webp`,
+          input: decodeDataUrl(f.image),
+        })),
+      );
+    } else {
+      // Full movie, including scenes (will render storyboards in place of scene with no frames).
+      for (let i = 0; i < scenes.length; i++) {
+        const scene = scenes[i];
+
+        // Skip the scene if there is no image in the storyboard.
+        // We don't allow frames to be added when there is no scene image, instead
+        // we redirect them to the "take photo of scene for storyboard" screen.
+        if (!scene.image) {
+          continue;
+        }
+
+        const sceneFrames = frames.filter((f) => f.scene === scene.id);
+
+        files.push({
+          name: `${padNumber(i, scenes.length)}.${padNumber(-1, sceneFrames.length)}.storyboard-image.webp`,
+          input: decodeDataUrl(scene.image),
+        });
+
+        files.push(
+          ...sceneFrames.map((f, fi) => ({
+            name: `${padNumber(i, scenes.length)}.${padNumber(fi, sceneFrames.length)}.frame.webp`,
+            input: decodeDataUrl(f.image),
+          })),
+        );
+      }
+    }
+
+    // get the ZIP stream in a Blob
+    console.log("Zipping files: ", files);
+    const blob = await downloadZip(files, { buffersAreUTF8: false }).blob();
+
+    // make and click a temporary link to download the Blob
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Movie.export.zip";
+    link.click();
+    link.remove();
+  },
+);
 
 export const generatePreviewVideo = createAsyncThunk(
   "project/generatePreviewVideo",

@@ -18,6 +18,7 @@ const ConfirmDeleteProject = () => {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const project = useSelector(selectProject);
+
   const [thumbnail, setThumbnail] = useState<string | undefined>();
 
   useEffect(() => {
@@ -31,6 +32,25 @@ const ConfirmDeleteProject = () => {
     await dispatch(deleteProject({ projectId: projectId! }));
     navigate("/");
   };
+
+  // If there is no data for this scene, then just delete it without obtaining confirmation.
+  // I'm not srue if we can ever get here, because we only actually show the delete button for a scene when you
+  // are in the <ProjectEditor> for it, and this can only happen if you've already taken a photo of the storyboard
+  // for it...
+  // Also be extra defensive because sometimes these things are undefined while we wait for loadProject() to get
+  // the details from the db, so we only do so if we've actually got all the details loaded first.
+  if (
+    scene !== undefined &&
+    scene.image === undefined &&
+    sceneDetails !== undefined &&
+    sceneDetails.frames.length === 0
+  ) {
+    console.info(
+      `Project ${projectId} scene ${sceneIndex} has no data. so deleting without confirmation.`,
+    );
+    handleDelete();
+    return null;
+  }
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-4">

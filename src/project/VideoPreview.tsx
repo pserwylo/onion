@@ -1,8 +1,12 @@
-import { generatePreviewVideo, selectPreviewVideo } from "./projectSlice.ts";
+import {
+  generateExportZip,
+  generatePreviewVideo,
+  selectPreviewVideo,
+} from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useEffect } from "react";
 import { Box, Button, Container, IconButton, Typography } from "@mui/material";
-import { Close, CloudDownload } from "@mui/icons-material";
+import { Close, CloudDownload, FolderZip } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router";
 
@@ -22,6 +26,10 @@ const VideoPreview = () => {
   if (sceneIndex) {
     backLink += `/scene/${sceneIndex}`;
   }
+
+  const handleExport = () => {
+    dispatch(generateExportZip());
+  };
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-y-2">
@@ -43,6 +51,14 @@ const VideoPreview = () => {
           variant="contained"
         >
           Download
+        </Button>
+        <Button
+          startIcon={<FolderZip />}
+          onClick={handleExport}
+          size="small"
+          variant="outlined"
+        >
+          Export
         </Button>
       </Box>
       <video src={previewVideo} controls autoPlay={true} />
