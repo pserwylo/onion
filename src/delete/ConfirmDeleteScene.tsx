@@ -42,7 +42,7 @@ const ConfirmDeleteScene = () => {
   };
 
   // If there is no data for this scene, then just delete it without obtaining confirmation.
-  // I'm not srue if we can ever get here, because we only actually show the delete button for a scene when you
+  // I'm not sure if we can ever get here, because we only actually show the delete button for a scene when you
   // are in the <ProjectEditor> for it, and this can only happen if you've already taken a photo of the storyboard
   // for it...
   // Also be extra defensive because sometimes these things are undefined while we wait for loadProject() to get
