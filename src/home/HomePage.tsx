@@ -28,7 +28,7 @@ export const HomePage = () => {
     <Container maxWidth="sm" className="flex flex-col gap-4">
       <Typography variant="h1">Animation Time</Typography>
       <Typography variant="h2" className="flex-grow">
-        Movies
+        Your Movies
       </Typography>
       <Grid container spacing={2}>
         <Grid size={6}>

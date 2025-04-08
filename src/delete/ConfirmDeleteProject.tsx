@@ -1,7 +1,14 @@
 import Container from "@mui/material/Container";
 import PageHeading from "../components/PageHeading.tsx";
 import { Link, useNavigate, useParams } from "react-router";
-import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
 import {
@@ -9,7 +16,7 @@ import {
   loadProject,
   selectProject,
 } from "../project/projectSlice.ts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Warning } from "@mui/icons-material";
 import { loadProjectThumbnail } from "../home/homeSlice.ts";
 
@@ -21,17 +28,34 @@ const ConfirmDeleteProject = () => {
 
   const [thumbnail, setThumbnail] = useState<string | undefined>();
 
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId }));
-      loadProjectThumbnail(projectId).then((thumb) => setThumbnail(thumb));
-    }
-  }, [dispatch, projectId]);
-
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     await dispatch(deleteProject({ projectId: projectId! }));
     navigate("/");
-  };
+  }, [dispatch, navigate, projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      (async function () {
+        await dispatch(loadProject({ projectId }));
+        const thumb = await loadProjectThumbnail(projectId);
+        if (thumb) {
+          setThumbnail(thumb);
+        } else {
+          // If there is no thumbnail, then there is no frames and no scene images. At this point,
+          // it seems silly to even ask permission, so lets just delete it and return back.
+          await handleDelete();
+        }
+      })();
+    }
+  }, [dispatch, projectId, handleDelete]);
+
+  if (project == null || thumbnail == null) {
+    return (
+      <Box className="flex flex-col">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="sm" className="flex flex-col gap-4">
