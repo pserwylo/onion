@@ -200,7 +200,7 @@ const CameraSelector = ({
       </div>
       {showHelp && (
         <Typography className="py-4 px-4 pt-4">
-          If the camera is always blury, try choosing a different one. Most
+          If the camera is always blurry, try choosing a different one. Most
           modern smart phones have multiple cameras on the back, each with
           different lenses (e.g. wide-angle, super-macro, etc). Some laptops
           even have infrared cameras.

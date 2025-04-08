@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { CameraAlt } from "@mui/icons-material";
 import { CameraDevice } from "../store/db.ts";
+import React from "react";
 
 type ICameraListProps = {
   cameras: CameraDevice[];
@@ -21,8 +22,8 @@ const CameraList = ({ cameras, onSelect, className }: ICameraListProps) => {
     <List sx={{ pt: 0 }} className={className}>
       <Divider />
       {cameras.map((device) => (
-        <>
-          <ListItem disablePadding key={device.id}>
+        <React.Fragment key={device.id}>
+          <ListItem disablePadding>
             <ListItemButton onClick={() => onSelect(device)}>
               <ListItemAvatar>
                 <Avatar>
@@ -33,7 +34,7 @@ const CameraList = ({ cameras, onSelect, className }: ICameraListProps) => {
             </ListItemButton>
           </ListItem>
           <Divider />
-        </>
+        </React.Fragment>
       ))}
     </List>
   );

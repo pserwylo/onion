@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   List,
@@ -22,6 +23,8 @@ const CameraInit = () => {
   const [status, setStatus] = useState<
     "require-permission" | "asking" | "rejected" | "granted"
   >("require-permission");
+  const [showTechnicalPermissionDetails, setShowTechnicalPermissionDetails] =
+    useState(false);
 
   const dispatch = useAppDispatch();
   const [error, setError] = useState<ICameraError | undefined>();
@@ -68,11 +71,59 @@ const CameraInit = () => {
   };
 
   if (devices === undefined) {
+    if (status === "asking") {
+      return (
+        <Box className="flex flex-col py-24 px-12 text-center">
+          <Box className="flex gap-4 justify-center items-center">
+            <CircularProgress />
+            <Typography>Searching for cameras</Typography>
+          </Box>
+        </Box>
+      );
+    }
+
     return (
-      <>
-        <h3>Need permission</h3>
-        <Button onClick={() => ask()}>Ask</Button>
-      </>
+      <Box className="flex flex-col gap-4">
+        <Typography variant="h4">Camera Permissions</Typography>
+        <Alert color="success">
+          <Box>
+            This app is for you to make stop motion movies. Doing so requires
+            access to your camera. Your privacy is the number one priority -
+            your photos remain on your device.
+          </Box>
+          {showTechnicalPermissionDetails ? (
+            <Box className="mt-4">
+              This app is a progressive web app. All of the photo's are stored
+              in your browser using IndexedDB. This app does not have any server
+              component beyond what is required to send the static HTML/JS/CSS
+              files for the progressive web app. The source code is free
+              software and available at{" "}
+              <a href="https://github.com/pserwylo/onion">
+                https://github.com/pserwylo/onion
+              </a>
+              .
+            </Box>
+          ) : (
+            <Box className="mt-4">
+              <Button
+                variant="text"
+                onClick={() => setShowTechnicalPermissionDetails(true)}
+                size="small"
+              >
+                Technical Details
+              </Button>
+            </Box>
+          )}
+        </Alert>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => ask()}
+          className="self-start"
+        >
+          Request Camera Permission
+        </Button>
+      </Box>
     );
   }
 
@@ -87,18 +138,14 @@ const CameraInit = () => {
             {error.help && <Typography>{error.help}</Typography>}
           </Alert>
         )}
-        <Button variant="contained" onClick={() => askAgain()}>
+        <Button
+          variant="contained"
+          onClick={() => askAgain()}
+          className="self-start"
+        >
           Try Again
         </Button>
       </>
-    );
-  }
-
-  if (status === "asking") {
-    return (
-      <div className="w-full h-full min-h-48">
-        <CircularProgress variant="indeterminate" />
-      </div>
     );
   }
 
@@ -119,7 +166,7 @@ const CameraInit = () => {
   }
   return (
     <div className="flex flex-col gap-y-4">
-      <Typography variant="h2">Choose a camera</Typography>
+      <Typography variant="h4">Choose a camera</Typography>
       <Alert color="info">
         <strong>Tips:</strong>
         <List sx={{ listStyleType: "disc", pl: 4 }}>
