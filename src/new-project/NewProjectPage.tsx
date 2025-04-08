@@ -49,7 +49,11 @@ export const NewProjectPage = () => {
             label={
               <Box className="flex flex-col gap-4 ml-4">
                 <Typography variant="h5">Simple Movie</Typography>
-                <Typography variant="caption">...</Typography>
+                <Typography variant="caption">
+                  Take a series of photos. They are then put together one after
+                  another, and then played at a fast speed to give the illusion
+                  of movement.
+                </Typography>
               </Box>
             }
           />
@@ -70,11 +74,11 @@ export const NewProjectPage = () => {
               <Box className="flex flex-col gap-4 ml-4">
                 <Typography variant="h5">Story Board + Scenes</Typography>
                 <Typography variant="caption">
-                  A storyboard is a way of planning animated films, movies, or
-                  television shows. A storyboard shows examples of what the
-                  artist wants to make before they are animated. It also lets
-                  artists organize their stories before they start to make the
-                  animation.
+                  Have a more complex story to tell? A storyboard is a way of
+                  planning animated films, movies, or television shows. A
+                  storyboard shows examples of what the artist wants to make
+                  before they are animated. It also lets artists organize their
+                  stories before they start to make the animation.
                 </Typography>
               </Box>
             }
