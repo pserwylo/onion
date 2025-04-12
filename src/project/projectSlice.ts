@@ -233,19 +233,45 @@ const generateVideoFromFrames = async (
   );
 
   const video = Whammy.fromImageArray(finalFrames, frameRate) as Blob;
-  const videoDataUrl = await blobToDataURL(video);
-  return videoDataUrl;
+  return blobToDataURL(video);
 };
+
+type MetadataJson =
+  | {
+      type: "simple";
+      project: {
+        frameRate: number;
+      };
+      frames: {
+        filename: string;
+        duration?: number;
+      }[];
+    }
+  | {
+      type: "storyboard";
+      project: {
+        frameRate: number;
+      };
+      scenes: {
+        filename: string;
+        frames: {
+          filename: string;
+          duration?: number;
+        }[];
+      }[];
+    };
 
 export const generateExportZip = createAsyncThunk(
   "project/generateExportZip",
   async (_: void, { getState }) => {
     // No need to "loadProject()" here, because to get to the video export functionality you must
     // be on the video preview ,which will already have loaded the project in question.
+    const project = selectProject(getState() as RootState);
     const frames = selectFrames(getState() as RootState);
     const scenes = selectScenes(getState() as RootState);
 
     const files: InputWithSizeMeta[] = [];
+    let metadata: MetadataJson;
 
     const decodeDataUrl = (url: string): Uint8Array => {
       const prefix = "data:image/webp;base64,";
@@ -272,8 +298,26 @@ export const generateExportZip = createAsyncThunk(
           input: decodeDataUrl(f.image),
         })),
       );
+
+      metadata = {
+        type: "simple",
+        project: {
+          frameRate: project.frameRate,
+        },
+        frames: frames.map((f, i) => ({
+          filename: `frame.${padNumber(i, frames.length)}.webp`,
+          duration: f.duration,
+        })),
+      };
     } else {
-      // Full movie, including scenes (will render storyboards in place of scene with no frames).
+      // Full movie, including scenes.
+      metadata = {
+        type: "storyboard",
+        project: {
+          frameRate: project.frameRate,
+        },
+        scenes: [],
+      };
       for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i];
 
@@ -286,19 +330,36 @@ export const generateExportZip = createAsyncThunk(
 
         const sceneFrames = frames.filter((f) => f.scene === scene.id);
 
+        const sceneFilename = `${padNumber(i, scenes.length)}.${padNumber(-1, sceneFrames.length)}.storyboard-image.webp`;
+        const frameFilename = (fi: number) =>
+          `${padNumber(i, scenes.length)}.${padNumber(fi, sceneFrames.length)}.frame.webp`;
+
         files.push({
-          name: `${padNumber(i, scenes.length)}.${padNumber(-1, sceneFrames.length)}.storyboard-image.webp`,
+          name: sceneFilename,
           input: decodeDataUrl(scene.image),
         });
 
         files.push(
           ...sceneFrames.map((f, fi) => ({
-            name: `${padNumber(i, scenes.length)}.${padNumber(fi, sceneFrames.length)}.frame.webp`,
+            name: frameFilename(fi),
             input: decodeDataUrl(f.image),
           })),
         );
+
+        metadata.scenes.push({
+          filename: sceneFilename,
+          frames: sceneFrames.map((f, fi) => ({
+            filename: frameFilename(fi),
+            duration: f.duration,
+          })),
+        });
       }
     }
+
+    files.push({
+      name: `metadata.json`,
+      input: JSON.stringify(metadata, null, 2),
+    });
 
     // get the ZIP stream in a Blob
     console.log("Zipping files: ", files);
