@@ -18,7 +18,7 @@ import clsx from "clsx";
 
 export const HomePage = () => {
   const dispatch = useAppDispatch();
-  const projects = useSelector(selectProjects);
+  const { projects, examples } = useSelector(selectProjects);
 
   useEffect(() => {
     dispatch(loadProjects());
@@ -38,7 +38,19 @@ export const HomePage = () => {
             </Button>
           </Item>
         </Grid>
-        {projects.toReversed().map((p) => (
+        {projects.map((p) => (
+          <Grid size={6} key={p.id}>
+            <Item className="flex flex-col">
+              <ProjectTile project={p} />
+            </Item>
+          </Grid>
+        ))}
+      </Grid>
+      <Typography variant="h2" className="flex-grow">
+        Examples
+      </Typography>
+      <Grid container spacing={2}>
+        {examples.map((p) => (
           <Grid size={6} key={p.id}>
             <Item className="flex flex-col">
               <ProjectTile project={p} />

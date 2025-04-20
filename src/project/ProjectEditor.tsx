@@ -149,16 +149,18 @@ const ProjectEditor = () => {
             >
               Edit
             </Button>
-            <Button
-              startIcon={<Delete />}
-              variant="outlined"
-              color="error"
-              size="small"
-              component={Link}
-              to={`/project/${projectId}/scene/${sceneIndex}/delete`}
-            >
-              Delete
-            </Button>
+            {project.demo || (
+              <Button
+                startIcon={<Delete />}
+                variant="outlined"
+                color="error"
+                size="small"
+                component={Link}
+                to={`/project/${projectId}/scene/${sceneIndex}/delete`}
+              >
+                Delete
+              </Button>
+            )}
           </Box>
         </Box>
       ) : (
@@ -181,16 +183,18 @@ const ProjectEditor = () => {
             >
               Watch
             </Button>
-            <Button
-              startIcon={<Delete />}
-              variant="outlined"
-              color="error"
-              size="small"
-              component={Link}
-              to={`/project/${projectId}/delete`}
-            >
-              Delete
-            </Button>
+            {project.demo || (
+              <Button
+                startIcon={<Delete />}
+                variant="outlined"
+                color="error"
+                size="small"
+                component={Link}
+                to={`/project/${projectId}/delete`}
+              >
+                Delete
+              </Button>
+            )}
           </Box>
         </Box>
       )}
@@ -202,49 +206,52 @@ const ProjectEditor = () => {
             frames={frames}
             sceneIndex={sceneIndex}
             className="w-full mb-2"
+            readOnly={project.demo}
           />
         </>
       )}
 
-      <Camera
-        onCapture={capture}
-        overlay={onionSkinImages.map((image) => (
-          <img
-            alt="overlay of previous frame"
-            className="onion-skin"
-            src={image.image}
-            key={image.id}
-          />
-        ))}
-        actions={
-          <>
-            <Tooltip title="Frame rate (fps)">
-              <IconButton
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  dispatch(toggleFrameRate());
-                }}
-              >
-                <Badge badgeContent={project.frameRate}>
-                  <Speed />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Onion skin">
-              <IconButton
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  dispatch(toggleOnionSkin());
-                }}
-              >
-                <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
-              </IconButton>
-            </Tooltip>
-          </>
-        }
-      />
+      {project.demo || (
+        <Camera
+          onCapture={capture}
+          overlay={onionSkinImages.map((image) => (
+            <img
+              alt="overlay of previous frame"
+              className="onion-skin"
+              src={image.image}
+              key={image.id}
+            />
+          ))}
+          actions={
+            <>
+              <Tooltip title="Frame rate (fps)">
+                <IconButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dispatch(toggleFrameRate());
+                  }}
+                >
+                  <Badge badgeContent={project.frameRate}>
+                    <Speed />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Onion skin">
+                <IconButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dispatch(toggleOnionSkin());
+                  }}
+                >
+                  <OnionSkinIcon numOnionSkins={project.numOnionSkins} />
+                </IconButton>
+              </Tooltip>
+            </>
+          }
+        />
+      )}
     </Container>
   );
 };

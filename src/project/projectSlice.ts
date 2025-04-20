@@ -7,10 +7,19 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
 import Whammy from "ts-whammy";
 import { blobToDataURL } from "./projectUtils.ts";
-import { getDB, FrameDTO, ProjectDTO, SceneDTO } from "../store/db.ts";
+import {
+  getDB,
+  FrameDTO,
+  ProjectDTO,
+  SceneDTO,
+  MetadataJson,
+  demoMovies,
+  addDemoMovie,
+} from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 import { downloadZip, InputWithSizeMeta } from "client-zip";
 import "core-js/actual/typed-array/from-base64";
+import "core-js/actual/typed-array/to-base64";
 
 const MAX_ONION_SKINS = 3;
 export const FRAME_RATES = [5, 15, 25];
@@ -167,9 +176,16 @@ export const loadProject = createAsyncThunk(
   ) => {
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
-    const project = await db.get("projects", projectId);
+    let project = await db.get("projects", projectId);
     if (project === undefined) {
-      return;
+      if (Object.hasOwn(demoMovies, projectId)) {
+        console.log(
+          `Tried to load project '${projectId}' but it wasn't found. However, it is a demo movie, so will populate the DB with it for the first time.`,
+        );
+        project = await addDemoMovie(projectId as keyof typeof demoMovies, db);
+      } else {
+        return;
+      }
     }
 
     // If we already have loaded this project, and this project already has a specific scroll index set for the
@@ -213,11 +229,49 @@ type IGeneratePreviewVideoArgs = {
 const generateVideoFromFrames = async (
   frames: FrameDTO[],
   frameRate: number,
+  requiresDownload?: boolean,
 ) => {
   console.log("generateVideoFromFrames: About to generate video. ", {
     frames,
     frameRate,
   });
+
+  if (requiresDownload) {
+    try {
+      console.log(
+        "generatevideoFromFrames: Need to download frames for demo before proceeding...",
+      );
+      frames = await Promise.all(
+        frames.map(async (f, i) => {
+          console.log(`Fetching ${f.image}...`);
+          const result = await fetch(f.image);
+          const imageBytes = await result.bytes();
+          const imageBase64 = encodeDataUrl(imageBytes);
+          console.log(`generateVideoFromFrames: ${i}: `, {
+            result,
+            imageBytes,
+            imageBase64,
+          });
+          return {
+            ...f,
+            image: imageBase64,
+          };
+        }),
+      );
+
+      console.log(
+        "generateVideoFromFrames: Downloaded frames for demo video to turn into video: ",
+        {
+          frames,
+        },
+      );
+    } catch (e) {
+      console.error(
+        "generateVideoFromFrames: Error downloading frames for demo video: ",
+        { error: e },
+      );
+    }
+  }
 
   const finalFrames = frames
     .map((frame) =>
@@ -236,30 +290,19 @@ const generateVideoFromFrames = async (
   return blobToDataURL(video);
 };
 
-type MetadataJson =
-  | {
-      type: "simple";
-      project: {
-        frameRate: number;
-      };
-      frames: {
-        filename: string;
-        duration?: number;
-      }[];
-    }
-  | {
-      type: "storyboard";
-      project: {
-        frameRate: number;
-      };
-      scenes: {
-        filename: string;
-        frames: {
-          filename: string;
-          duration?: number;
-        }[];
-      }[];
-    };
+const encodeDataUrl = (data: Uint8Array): string => {
+  const prefix = "data:image/webp;base64,";
+
+  // @ts-expect-error polyfil from core-js without types
+  return prefix + data.toBase64();
+};
+
+const decodeDataUrl = (url: string): Uint8Array => {
+  const prefix = "data:image/webp;base64,";
+
+  // @ts-expect-error polyfil from core-js without types
+  return Uint8Array.fromBase64(url.substring(prefix.length));
+};
 
 export const generateExportZip = createAsyncThunk(
   "project/generateExportZip",
@@ -272,13 +315,6 @@ export const generateExportZip = createAsyncThunk(
 
     const files: InputWithSizeMeta[] = [];
     let metadata: MetadataJson;
-
-    const decodeDataUrl = (url: string): Uint8Array => {
-      const prefix = "data:image/webp;base64,";
-
-      // @ts-expect-error polyfil from core-js without types
-      return Uint8Array.fromBase64(url.substring(prefix.length));
-    };
 
     const padNumber = (num: number, maxNum: number) => {
       let pad = 1;
@@ -382,6 +418,7 @@ export const generatePreviewVideo = createAsyncThunk(
   ) => {
     dispatch(projectSlice.actions.updatePreviewVideo());
     await dispatch(loadProject({ projectId, sceneIndex }));
+    const project = selectProject(getState() as RootState);
     const frames = selectFrames(getState() as RootState);
     const scenes = selectScenes(getState() as RootState);
     const { frameRate } = selectProject(getState() as RootState);
@@ -389,12 +426,16 @@ export const generatePreviewVideo = createAsyncThunk(
     let video: string;
     if (scenes.length === 0) {
       // Simple movie, no scenes
-      video = await generateVideoFromFrames(frames, frameRate);
+      video = await generateVideoFromFrames(frames, frameRate, project.demo);
     } else if (sceneIndex !== undefined) {
       // Individual scene.
       const scene = scenes[parseInt(sceneIndex, 10)];
       const sceneFrames = frames.filter((f) => f.scene === scene.id);
-      video = await generateVideoFromFrames(sceneFrames, frameRate);
+      video = await generateVideoFromFrames(
+        sceneFrames,
+        frameRate,
+        project.demo,
+      );
     } else {
       // Full movie, including scenes (will render storyboards in place of scene with no frames).
       const framesToRender: FrameDTO[] = [];
@@ -424,7 +465,11 @@ export const generatePreviewVideo = createAsyncThunk(
         }
       }
 
-      video = await generateVideoFromFrames(framesToRender, frameRate);
+      video = await generateVideoFromFrames(
+        framesToRender,
+        frameRate,
+        project.demo,
+      );
     }
 
     dispatch(projectSlice.actions.updatePreviewVideo(video));

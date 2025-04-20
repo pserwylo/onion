@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSelector,
+  createSlice,
+} from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store/store";
 import { getDB, ProjectDTO, SceneDTO } from "../store/db.ts";
@@ -134,6 +138,13 @@ export const homeSlice = createSlice({
 });
 
 // Other code such as selectors can use the imported `RootState` type
-export const selectProjects = ({ home }: RootState) => home.projects;
+const selectAllProjects = ({ home }: RootState) => home.projects;
+export const selectProjects = createSelector(
+  [selectAllProjects],
+  (projects) => ({
+    projects: projects.filter((p) => !p.demo).toReversed(),
+    examples: projects.filter((p) => p.demo),
+  }),
+);
 
 export default homeSlice.reducer;

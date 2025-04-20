@@ -1,0 +1,69 @@
+{
+  "type": "simple",
+  "project": {
+    "frameRate": 5
+  },
+  "frames": [
+    {
+      "filename": "frame.01.webp",
+      "duration": 3
+    },
+    {
+      "filename": "frame.02.webp",
+      "duration": 2
+    },
+    {
+      "filename": "frame.03.webp",
+      "duration": 1
+    },
+    {
+      "filename": "frame.04.webp"
+    },
+    {
+      "filename": "frame.05.webp"
+    },
+    {
+      "filename": "frame.06.webp"
+    },
+    {
+      "filename": "frame.07.webp"
+    },
+    {
+      "filename": "frame.08.webp"
+    },
+    {
+      "filename": "frame.09.webp"
+    },
+    {
+      "filename": "frame.10.webp",
+      "duration": 1
+    },
+    {
+      "filename": "frame.11.webp",
+      "duration": 2
+    },
+    {
+      "filename": "frame.12.webp"
+    },
+    {
+      "filename": "frame.13.webp"
+    },
+    {
+      "filename": "frame.14.webp"
+    },
+    {
+      "filename": "frame.15.webp"
+    },
+    {
+      "filename": "frame.16.webp"
+    },
+    {
+      "filename": "frame.17.webp",
+      "duration": 4
+    },
+    {
+      "filename": "frame.18.webp",
+      "duration": 1
+    }
+  ]
+}
