@@ -1,5 +1,6 @@
 import { DBSchema, IDBPDatabase, openDB } from "idb";
 import metadataDuploDemo from "./movies/metadata.duplo-demo.json";
+import metadataDrawingDemo from "./movies/metadata.drawing-demo.json";
 import { v7 as uuid } from "uuid";
 
 export type CameraDevice = {
@@ -82,7 +83,8 @@ interface OnionDB extends DBSchema {
 
 export const getDB = async () => {
   let addDuploDemo = false;
-  const db = await openDB<OnionDB>("db", 2, {
+  let addDrawingDemo = false;
+  const db = await openDB<OnionDB>("db", 3, {
     upgrade(d, oldVersion) {
       try {
         if (oldVersion < 1) {
@@ -109,6 +111,10 @@ export const getDB = async () => {
         if (oldVersion < 2) {
           addDuploDemo = true;
         }
+
+        if (oldVersion < 3) {
+          addDrawingDemo = true;
+        }
       } catch (e) {
         console.error(e);
       }
@@ -116,9 +122,11 @@ export const getDB = async () => {
   });
 
   if (addDuploDemo) {
-    console.log("Need to add duplo demo.");
-    console.log({ db });
     await addDemoMovie("duplo-demo", db);
+  }
+
+  if (addDrawingDemo) {
+    await addDemoMovie("drawing-demo", db);
   }
 
   return db;
@@ -126,26 +134,23 @@ export const getDB = async () => {
 
 export const demoMovies = {
   "duplo-demo": metadataDuploDemo,
+  "drawing-demo": metadataDrawingDemo,
 };
 
 export const addDemoMovie = async (
   id: keyof typeof demoMovies,
   db: IDBPDatabase<OnionDB>,
 ) => {
-  console.log(`addDemoMovie('${id}'): a`);
+  console.info(`Adding demo movie: ${id}`);
   const metadata = demoMovies[id] as MetadataJson;
-  console.log(`addDemoMovie('${id}'): b`, { metadata });
   const path = `${import.meta.env.BASE_URL}/movies/${id}/`;
-  console.log(`addDemoMovie('${id}'): c`, { path });
   const project = {
     id,
     demo: true,
     frameRate: metadata.project.frameRate,
     numOnionSkins: 1,
   };
-  console.log(`addDemoMovie('${id}'): d`, { project });
-  db.put("projects", project);
-  console.log(`addDemoMovie('${id}'): e`);
+  await db.put("projects", project);
 
   if (metadata.type === "simple") {
     await Promise.all(

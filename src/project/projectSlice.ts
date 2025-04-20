@@ -13,8 +13,6 @@ import {
   ProjectDTO,
   SceneDTO,
   MetadataJson,
-  demoMovies,
-  addDemoMovie,
 } from "../store/db.ts";
 import { v7 as uuid } from "uuid";
 import { downloadZip, InputWithSizeMeta } from "client-zip";
@@ -176,16 +174,9 @@ export const loadProject = createAsyncThunk(
   ) => {
     console.log(`Loading project ${projectId} from db.`);
     const db = await getDB();
-    let project = await db.get("projects", projectId);
+    const project = await db.get("projects", projectId);
     if (project === undefined) {
-      if (Object.hasOwn(demoMovies, projectId)) {
-        console.log(
-          `Tried to load project '${projectId}' but it wasn't found. However, it is a demo movie, so will populate the DB with it for the first time.`,
-        );
-        project = await addDemoMovie(projectId as keyof typeof demoMovies, db);
-      } else {
-        return;
-      }
+      return;
     }
 
     // If we already have loaded this project, and this project already has a specific scroll index set for the
@@ -238,38 +229,17 @@ const generateVideoFromFrames = async (
 
   if (requiresDownload) {
     try {
-      console.log(
-        "generatevideoFromFrames: Need to download frames for demo before proceeding...",
-      );
+      console.log("Need to download frames for demo before proceeding.");
       frames = await Promise.all(
-        frames.map(async (f, i) => {
-          console.log(`Fetching ${f.image}...`);
+        frames.map(async (f) => {
           const result = await fetch(f.image);
           const imageBytes = await result.bytes();
-          const imageBase64 = encodeDataUrl(imageBytes);
-          console.log(`generateVideoFromFrames: ${i}: `, {
-            result,
-            imageBytes,
-            imageBase64,
-          });
-          return {
-            ...f,
-            image: imageBase64,
-          };
+          const image = encodeDataUrl(imageBytes);
+          return { ...f, image };
         }),
       );
-
-      console.log(
-        "generateVideoFromFrames: Downloaded frames for demo video to turn into video: ",
-        {
-          frames,
-        },
-      );
-    } catch (e) {
-      console.error(
-        "generateVideoFromFrames: Error downloading frames for demo video: ",
-        { error: e },
-      );
+    } catch (error) {
+      console.error("Error downloading frames for demo video: ", error);
     }
   }
 
@@ -280,11 +250,6 @@ const generateVideoFromFrames = async (
         : frame.image,
     )
     .flat();
-
-  console.log(
-    "Final frames for generation, after taking into account frame duration: ",
-    finalFrames,
-  );
 
   const video = Whammy.fromImageArray(finalFrames, frameRate) as Blob;
   return blobToDataURL(video);
