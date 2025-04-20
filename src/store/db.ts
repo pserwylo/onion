@@ -1,6 +1,6 @@
 import { DBSchema, IDBPDatabase, openDB } from "idb";
-import metadataDuploDemo from "./movies/metadata.duplo-demo.json";
-import metadataDrawingDemo from "./movies/metadata.drawing-demo.json";
+import metadataTheVet from "./movies/metadata.the-vet.json";
+import metadataBloom from "./movies/metadata.bloom.json";
 import { v7 as uuid } from "uuid";
 
 export type CameraDevice = {
@@ -15,6 +15,7 @@ export type SettingsDTO = {
 
 export type ProjectDTO = {
   id: string;
+  title?: string;
   frameRate: number;
   numOnionSkins: number;
   demo?: boolean;
@@ -40,6 +41,7 @@ export type MetadataJson =
       type: "simple";
       project: {
         frameRate: number;
+        title: string;
       };
       frames: {
         filename: string;
@@ -50,6 +52,7 @@ export type MetadataJson =
       type: "storyboard";
       project: {
         frameRate: number;
+        title: string;
       };
       scenes: {
         filename: string;
@@ -82,8 +85,8 @@ interface OnionDB extends DBSchema {
 }
 
 export const getDB = async () => {
-  let addDuploDemo = false;
-  let addDrawingDemo = false;
+  let addTheVet = false;
+  let addBloom = false;
   const db = await openDB<OnionDB>("db", 3, {
     upgrade(d, oldVersion) {
       try {
@@ -109,11 +112,11 @@ export const getDB = async () => {
         }
 
         if (oldVersion < 2) {
-          addDuploDemo = true;
+          addTheVet = true;
         }
 
         if (oldVersion < 3) {
-          addDrawingDemo = true;
+          addBloom = true;
         }
       } catch (e) {
         console.error(e);
@@ -121,20 +124,20 @@ export const getDB = async () => {
     },
   });
 
-  if (addDuploDemo) {
-    await addDemoMovie("duplo-demo", db);
+  if (addTheVet) {
+    await addDemoMovie("the-vet", db);
   }
 
-  if (addDrawingDemo) {
-    await addDemoMovie("drawing-demo", db);
+  if (addBloom) {
+    await addDemoMovie("bloom", db);
   }
 
   return db;
 };
 
 export const demoMovies = {
-  "duplo-demo": metadataDuploDemo,
-  "drawing-demo": metadataDrawingDemo,
+  "the-vet": metadataTheVet,
+  bloom: metadataBloom,
 };
 
 export const addDemoMovie = async (

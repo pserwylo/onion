@@ -1,7 +1,8 @@
 {
   "type": "simple",
   "project": {
-    "frameRate": 5
+    "frameRate": 5,
+    "title": "Bloom"
   },
   "frames": [
     {

@@ -1,7 +1,8 @@
 {
   "type": "simple",
   "project": {
-    "frameRate": 15
+    "frameRate": 15,
+    "title": "The Vet"
   },
   "frames": [
     {
