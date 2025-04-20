@@ -304,6 +304,7 @@ export const generateExportZip = createAsyncThunk(
         type: "simple",
         project: {
           frameRate: project.frameRate,
+          title: project.title ?? "",
         },
         frames: frames.map((f, i) => ({
           filename: `frame.${padNumber(i, frames.length)}.webp`,
@@ -316,6 +317,7 @@ export const generateExportZip = createAsyncThunk(
         type: "storyboard",
         project: {
           frameRate: project.frameRate,
+          title: project.title ?? "",
         },
         scenes: [],
       };
