@@ -70,7 +70,7 @@ const ProjectTile = ({ project }: IProjectTileProps) => {
   return (
     <Button
       component={Link}
-      className="border-1 m-3 p-3 flex-grow"
+      className="border-1 m-3 p-3 flex-grow relative"
       to={`/project/${project.id}`}
       style={{
         backgroundImage: project.thumbnail
@@ -81,6 +81,11 @@ const ProjectTile = ({ project }: IProjectTileProps) => {
       }}
     >
       {project.thumbnail ? null : "Open Movie"}
+      {project.title && (
+        <Typography className="absolute left-0 bottom-0 text-white px-4 py-2 bg-slate-800/25">
+          {project.title}
+        </Typography>
+      )}
     </Button>
   );
 };

@@ -152,6 +152,7 @@ export const addDemoMovie = async (
     demo: true,
     frameRate: metadata.project.frameRate,
     numOnionSkins: 1,
+    title: metadata.project.title,
   };
   await db.put("projects", project);
 
