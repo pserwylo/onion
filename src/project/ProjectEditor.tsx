@@ -167,7 +167,7 @@ const ProjectEditor = () => {
         <Box className="flex flex-col gap-4 mb-4 mt-4 w-full items-start">
           <Box className="flex w-full">
             <Typography variant="h3" className="flex-grow">
-              Movie
+              {project.title ?? "Movie"}
             </Typography>
             <IconButton component={Link} to="/">
               <Close />
