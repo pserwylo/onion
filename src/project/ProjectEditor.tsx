@@ -1,8 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useAppDispatch } from "../store/hooks.ts";
 import {
   addFrame,
-  loadProject,
   makeSelectSceneSummary,
   selectFrames,
   selectOnionSkinImages,
@@ -33,15 +32,13 @@ import {
   PlayCircle,
   Speed,
 } from "@mui/icons-material";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 import FrameList from "./FrameList.tsx";
 import Camera from "../components/Camera.tsx";
+import { useProjectRoute } from "../hooks/useProjectRoute.ts";
 
 const ProjectEditor = () => {
-  const { projectId, sceneIndex } = useParams<{
-    projectId: string;
-    sceneIndex: string;
-  }>();
+  const { projectId, sceneIndex } = useProjectRoute();
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -51,12 +48,6 @@ const ProjectEditor = () => {
   const scene = useSelector(selectScene);
   const scenes = useSelector(selectScenes);
   const project = useSelector(selectProject);
-
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId, sceneIndex }));
-    }
-  }, [dispatch, projectId, sceneIndex]);
 
   const capture = useCallback(
     async (image: string | null) => {

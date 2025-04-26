@@ -1,5 +1,4 @@
-import { useNavigate, useParams } from "react-router";
-import { loadProject, selectFrame, setFrameDuration } from "./projectSlice.ts";
+import { selectFrame, setFrameDuration } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { useSelector } from "react-redux";
 import {
@@ -12,38 +11,17 @@ import {
   OutlinedInput,
 } from "@mui/material";
 import { Close, Pause } from "@mui/icons-material";
-import { useEffect } from "react";
 import PageHeading from "../components/PageHeading.tsx";
+import { useProjectRoute } from "../hooks/useProjectRoute.ts";
 
 const FrameEditor = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { projectId, sceneIndex, frameId } = useParams<{
-    projectId: string;
-    sceneIndex?: string;
-    frameId: string;
-  }>();
+  const { projectId, sceneIndex, frameId } = useProjectRoute({
+    requireFrame: true,
+  });
   const frame = useSelector(selectFrame);
 
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId, sceneIndex, frameId }));
-    }
-  }, [dispatch, projectId, sceneIndex, frameId]);
-
-  if (projectId == null) {
-    console.warn("No project ID provided to FrameEditor URL.");
-    navigate(`/`);
-    return null;
-  }
-
-  if (frameId == null) {
-    console.warn("No frame ID provided to FrameEditor URL.");
-    navigate(`/project/${projectId}`);
-    return null;
-  }
-
-  if (frame == null) {
+  if (frame == null || frameId === undefined) {
     return null;
   }
 

@@ -1,26 +1,20 @@
-import { useNavigate, useParams } from "react-router";
-import { addSceneImage, loadProject, selectScene } from "./projectSlice.ts";
+import { useNavigate } from "react-router";
+import { addSceneImage, selectScene } from "./projectSlice.ts";
 import { useAppDispatch } from "../store/hooks.ts";
 import { Container, Typography } from "@mui/material";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import Camera from "../components/Camera.tsx";
 import { useSelector } from "react-redux";
 import PageHeading from "../components/PageHeading.tsx";
+import { useProjectRoute } from "../hooks/useProjectRoute.ts";
 
 const ScenePhotoEditor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const scene = useSelector(selectScene);
-  const { projectId, sceneIndex } = useParams<{
-    projectId: string;
-    sceneIndex: string;
-  }>();
-
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId, sceneIndex }));
-    }
-  }, [dispatch, projectId, sceneIndex]);
+  const { projectId, sceneIndex } = useProjectRoute({
+    requireScene: true,
+  });
 
   const capture = useCallback(
     async (image: string | null) => {

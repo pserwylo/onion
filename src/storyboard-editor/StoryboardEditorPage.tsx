@@ -8,13 +8,11 @@ import {
   styled,
   Typography,
 } from "@mui/material";
-import { useAppDispatch } from "../store/hooks.ts";
-import { Link, LinkProps, useNavigate, useParams } from "react-router";
+import { Link, LinkProps } from "react-router";
 import { useSelector } from "react-redux";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import clsx from "clsx";
 import {
-  loadProject,
   selectScenes,
   makeSelectSceneSummary,
 } from "../project/projectSlice.ts";
@@ -29,28 +27,16 @@ import {
 } from "@mui/icons-material";
 import { OverlayText } from "../project/FrameList.tsx";
 import PageHeading from "../components/PageHeading.tsx";
+import { useProjectRoute } from "../hooks/useProjectRoute.ts";
 
 export const StoryboardEditorPage = () => {
-  const dispatch = useAppDispatch();
-  const { projectId } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
+  const { projectId } = useProjectRoute();
   const scenes = useSelector(selectScenes);
   const [showHelp, setShowHelp] = useState(false);
-
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId }));
-    }
-  }, [dispatch, projectId]);
 
   const hasScene = useMemo(() => {
     return scenes.some((s) => s.image !== undefined);
   }, [scenes]);
-
-  if (!projectId) {
-    navigate("/");
-    return null;
-  }
 
   return (
     <Container maxWidth="sm">

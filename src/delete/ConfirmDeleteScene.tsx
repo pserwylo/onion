@@ -1,10 +1,8 @@
 import Container from "@mui/material/Container";
 import PageHeading from "../components/PageHeading.tsx";
-import { Link, useNavigate, useParams } from "react-router";
-import { useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   deleteScene,
-  loadProject,
   makeSelectSceneSummary,
   selectProject,
   selectScene,
@@ -14,25 +12,17 @@ import { useSelector } from "react-redux";
 import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
 import { Warning } from "@mui/icons-material";
 import FrameList from "../project/FrameList.tsx";
+import { useProjectRoute } from "../hooks/useProjectRoute.ts";
 
 const ConfirmDeleteScene = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { projectId, sceneIndex } = useParams<{
-    projectId: string;
-    sceneIndex: string;
-  }>();
+  const { projectId, sceneIndex } = useProjectRoute();
   const sceneDetails = useSelector(makeSelectSceneSummary(sceneIndex));
   const scene = useSelector(selectScene);
   const project = useSelector(selectProject);
 
   const sceneIndexInt = parseInt(sceneIndex!, 10);
-
-  useEffect(() => {
-    if (projectId) {
-      dispatch(loadProject({ projectId, sceneIndex }));
-    }
-  }, [dispatch, projectId, sceneIndex]);
 
   const handleDelete = async () => {
     await dispatch(
