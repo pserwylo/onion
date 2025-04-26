@@ -48,7 +48,9 @@ export const StoryboardEditorPage = () => {
       <PageHeading
         title={project ? project.title : ""}
         subtitle="Storyboard"
-        onTitleChange={(title) => dispatch(updateTitle(title))}
+        onTitleChange={
+          project.demo ? undefined : (title) => dispatch(updateTitle(title))
+        }
         backLink="/"
         actions={
           hasScene ? (

@@ -156,7 +156,9 @@ const ProjectEditor = () => {
           <PageHeading
             title={project.title}
             backLink="/"
-            onTitleChange={(title) => dispatch(updateTitle(title))}
+            onTitleChange={
+              project.demo ? undefined : (title) => dispatch(updateTitle(title))
+            }
             className="w-full"
           />
           <Box className="flex gap-4">
