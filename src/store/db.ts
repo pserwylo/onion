@@ -15,7 +15,7 @@ export type SettingsDTO = {
 
 export type ProjectDTO = {
   id: string;
-  title?: string;
+  title: string;
   frameRate: number;
   numOnionSkins: number;
   demo?: boolean;

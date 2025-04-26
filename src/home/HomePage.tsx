@@ -81,11 +81,9 @@ const ProjectTile = ({ project }: IProjectTileProps) => {
       }}
     >
       {project.thumbnail ? null : "Open Movie"}
-      {project.title && (
-        <Typography className="absolute left-0 bottom-0 text-white px-4 py-2 bg-slate-800/25">
-          {project.title}
-        </Typography>
-      )}
+      <Typography className="absolute left-0 bottom-0 text-white px-4 py-2 bg-slate-800/25">
+        {project.title}
+      </Typography>
     </Button>
   );
 };

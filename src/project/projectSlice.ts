@@ -131,6 +131,24 @@ export const deleteProject = createAsyncThunk(
   },
 );
 
+export const updateTitle = createAsyncThunk(
+  "project/updateTitle",
+  async (title: string, { dispatch, getState }) => {
+    const project = selectProject(getState() as RootState);
+    if (project == null) {
+      return;
+    }
+
+    const db = await getDB();
+    await db.put("projects", {
+      ...project,
+      title,
+    });
+
+    dispatch(projectSlice.actions.setTitle(title));
+  },
+);
+
 type IDeleteSceneArgs = {
   projectId: string;
   sceneIndex: number;
@@ -304,7 +322,7 @@ export const generateExportZip = createAsyncThunk(
         type: "simple",
         project: {
           frameRate: project.frameRate,
-          title: project.title ?? "",
+          title: project.title,
         },
         frames: frames.map((f, i) => ({
           filename: `frame.${padNumber(i, frames.length)}.webp`,
@@ -317,7 +335,7 @@ export const generateExportZip = createAsyncThunk(
         type: "storyboard",
         project: {
           frameRate: project.frameRate,
-          title: project.title ?? "",
+          title: project.title,
         },
         scenes: [],
       };
@@ -562,6 +580,11 @@ export const projectSlice = createSlice({
     },
     setProject: (state, action: PayloadAction<ProjectDTO>) => {
       state.project = action.payload;
+    },
+    setTitle: (state, action: PayloadAction<string>) => {
+      if (state.project) {
+        state.project.title = action.payload;
+      }
     },
     setFrameListScrollIndex: (
       state,

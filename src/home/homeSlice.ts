@@ -16,6 +16,7 @@ export const addProject = createAsyncThunk(
       id: uuid(),
       frameRate: FRAME_RATES[0],
       numOnionSkins: 1,
+      title: "Movie",
     };
 
     const db = await getDB();

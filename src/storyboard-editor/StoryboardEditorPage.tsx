@@ -15,6 +15,8 @@ import clsx from "clsx";
 import {
   selectScenes,
   makeSelectSceneSummary,
+  selectProject,
+  updateTitle,
 } from "../project/projectSlice.ts";
 import { SceneDTO } from "../store/db.ts";
 import {
@@ -28,11 +30,14 @@ import {
 import { OverlayText } from "../project/FrameList.tsx";
 import PageHeading from "../components/PageHeading.tsx";
 import { useProjectRoute } from "../hooks/useProjectRoute.ts";
+import { useAppDispatch } from "../store/hooks.ts";
 
 export const StoryboardEditorPage = () => {
   const { projectId } = useProjectRoute();
+  const dispatch = useAppDispatch();
   const scenes = useSelector(selectScenes);
   const [showHelp, setShowHelp] = useState(false);
+  const project = useSelector(selectProject);
 
   const hasScene = useMemo(() => {
     return scenes.some((s) => s.image !== undefined);
@@ -41,7 +46,9 @@ export const StoryboardEditorPage = () => {
   return (
     <Container maxWidth="sm">
       <PageHeading
-        title="Storyboard"
+        title={project ? project.title : ""}
+        subtitle="Storyboard"
+        onTitleChange={(title) => dispatch(updateTitle(title))}
         backLink="/"
         actions={
           hasScene ? (

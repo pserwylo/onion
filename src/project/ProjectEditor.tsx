@@ -10,6 +10,7 @@ import {
   selectScenes,
   toggleFrameRate,
   toggleOnionSkin,
+  updateTitle,
 } from "./projectSlice.ts";
 import { useSelector } from "react-redux";
 import {
@@ -19,13 +20,11 @@ import {
   Container,
   IconButton,
   Tooltip,
-  Typography,
 } from "@mui/material";
 import {
   CameraAlt,
   ChevronLeft,
   ChevronRight,
-  Close,
   Delete,
   Layers,
   LayersClear,
@@ -36,6 +35,7 @@ import { Link, useNavigate } from "react-router";
 import FrameList from "./FrameList.tsx";
 import Camera from "../components/Camera.tsx";
 import { useProjectRoute } from "../hooks/useProjectRoute.ts";
+import PageHeading from "../components/PageHeading.tsx";
 
 const ProjectEditor = () => {
   const { projectId, sceneIndex } = useProjectRoute();
@@ -85,42 +85,39 @@ const ProjectEditor = () => {
     <Container maxWidth="sm">
       {scene && sceneIndexInt !== undefined ? (
         <Box className="flex flex-col gap-4 my-4 w-full">
-          <Box className="flex gap-4 w-full">
-            <img alt="scene image" src={scene.image} className="h-24" />
-            <Typography variant="h3" className="flex-grow">
-              Scene {sceneIndexInt + 1}
-            </Typography>
-            <IconButton
-              disabled={sceneIndex === "0"}
-              component={Link}
-              className="self-start"
-              to={
-                sceneIndexInt !== 0
-                  ? `/project/${projectId}/scene/${sceneIndexInt - 1}`
-                  : "/"
-              }
-            >
-              <ChevronLeft />
-            </IconButton>
-            <IconButton
-              component={Link}
-              className="self-start"
-              to={
-                sceneIndexInt < scenes.length - 1
-                  ? `/project/${projectId}/scene/${sceneIndexInt + 1}`
-                  : "/"
-              }
-            >
-              <ChevronRight />
-            </IconButton>
-            <IconButton
-              component={Link}
-              to={`/project/${projectId}/storyboard`}
-              className="self-start"
-            >
-              <Close />
-            </IconButton>
-          </Box>
+          <PageHeading
+            thumbnail={scene.image}
+            title={project.title}
+            subtitle={`Scene ${sceneIndexInt + 1}`}
+            backLink={`/project/${projectId}/storyboard`}
+            actions={
+              <>
+                <IconButton
+                  disabled={sceneIndex === "0"}
+                  component={Link}
+                  className="self-start"
+                  to={
+                    sceneIndexInt !== 0
+                      ? `/project/${projectId}/scene/${sceneIndexInt - 1}`
+                      : "/"
+                  }
+                >
+                  <ChevronLeft />
+                </IconButton>
+                <IconButton
+                  component={Link}
+                  className="self-start"
+                  to={
+                    sceneIndexInt < scenes.length - 1
+                      ? `/project/${projectId}/scene/${sceneIndexInt + 1}`
+                      : "/"
+                  }
+                >
+                  <ChevronRight />
+                </IconButton>
+              </>
+            }
+          />
           <Box className="flex gap-4">
             <Button
               startIcon={<PlayCircle />}
@@ -156,14 +153,12 @@ const ProjectEditor = () => {
         </Box>
       ) : (
         <Box className="flex flex-col gap-4 mb-4 mt-4 w-full items-start">
-          <Box className="flex w-full">
-            <Typography variant="h3" className="flex-grow">
-              {project.title ?? "Movie"}
-            </Typography>
-            <IconButton component={Link} to="/">
-              <Close />
-            </IconButton>
-          </Box>
+          <PageHeading
+            title={project.title}
+            backLink="/"
+            onTitleChange={(title) => dispatch(updateTitle(title))}
+            className="w-full"
+          />
           <Box className="flex gap-4">
             <Button
               startIcon={<PlayCircle />}
