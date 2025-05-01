@@ -264,10 +264,14 @@ const generateVideoFromFrames = async (
   const finalFrames = frames
     .map((frame) =>
       frame.duration
-        ? new Array<string>(frameRate * frame.duration).fill(frame.image)
+        ? new Array<string>(Math.round(frameRate * frame.duration)).fill(
+            frame.image,
+          )
         : frame.image,
     )
     .flat();
+
+  console.log("generateVideoFromFrames: final frames ", { finalFrames });
 
   const video = Whammy.fromImageArray(finalFrames, frameRate) as Blob;
   return blobToDataURL(video);
